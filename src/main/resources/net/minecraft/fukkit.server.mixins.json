@@ -1,0 +1,22 @@
+{
+  "required": true,
+  "package": "com.github.fukkitmc.fukkit.mixin.net.minecraft",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "server.network.ServerLoginNetworkHandler$1Mixin",
+    "server.network.ServerLoginNetworkHandlerMixin",
+    "server.network.ServerPlayerEntityMixin",
+    "server.world.SecondaryServerWorldMixin",
+    "server.world.ServerWorldMixin",
+    "server.world.ThreadedAnvilChunkStorageMixin",
+    "server.MinecraftServerMixin",
+    "server.PlayerManagerMixin",
+    "server.ServerNetworkIoMixin"
+  ],
+  "injectors": {
+    "injectionPoints": [
+      "com.github.fukkitmc.fukkit.injectors.GenericOpcode"
+    ],
+    "defaultRequire": 1
+  }
+}

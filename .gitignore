@@ -1,0 +1,34 @@
+#Gradle
+.gradle/
+build/
+out/
+classes/
+gradlew.bat
+gradlew
+logs.txt
+
+#IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+#vscode
+.settings/
+.vscode/
+bin/
+.classpath
+.project
+
+#fabric
+run/
+
+#Yeoman
+.yo-rc.json
+
+# fukkit
+patches/
+
+# patches
+*.patch
+

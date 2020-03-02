@@ -1,0 +1,119 @@
+plugins {
+	id 'fabric-loom' version '0.2.6-SNAPSHOT'
+	id 'maven-publish'
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+archivesBaseName = project.archives_base_name
+version = project.mod_version
+group = project.maven_group
+
+repositories {
+	mavenCentral()
+	maven {
+		name = 'spigot'
+		url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+	}
+}
+
+configurations {
+	releaseJars
+}
+
+dependencies {
+	//to change the versions see the gradle.properties file
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// we need to shade this
+	releaseJars 'org.bukkit:bukkit:1.15.2-R0.1-SNAPSHOT'
+	// and this
+	releaseJars "jline:jline:2.12.1"
+	// and this
+	releaseJars "org.ow2.asm:asm:7.2"
+	// and this
+	releaseJars "com.googlecode.json-simple:json-simple:1.1.1"
+	// and this
+	releaseJars "org.xerial:sqlite-jdbc:3.28.0"
+	// and this
+	releaseJars "mysql:mysql-connector-java:5.1.48"
+	// damn bukkit has alot of dependancies
+	// irritatered
+	releaseJars files('libs/Dev-Lib-1.0-SNAPSHOT.jar')
+	// hacky gradle script, see below
+	compileOnly files("libs/${project.minecraft_version}-decrusted.jar")
+
+	// and why not
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	configurations.compile.extendsFrom(configurations.releaseJars)
+}
+
+compileJava {
+	file("$buildDir/classes/java/main/org").deleteDir()
+	copy {
+		from(zipTree("libs/${project.minecraft_version}-decrusted.jar")) {
+			exclude "*"
+			include "org/bukkit/**"
+		}
+		into("$buildDir/classes/java/main")
+	}
+}
+
+
+processResources {
+	inputs.property "version", project.version
+
+	from(sourceSets.main.resources.srcDirs) {
+		include "fabric.mod.json"
+		expand "version": project.version
+	}
+
+	from(sourceSets.main.resources.srcDirs) {
+		exclude "fabric.mod.json"
+	}
+}
+
+// ensure that the encoding is set to UTF-8, no matter what the system default is
+// this fixes some edge cases with special characters not displaying correctly
+// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+tasks.withType(JavaCompile) {
+	options.encoding = "UTF-8"
+}
+
+// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+// if it is present.
+// If you remove this task, sources will not be generated.
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}
+
+jar {
+	from "LICENSE"
+	from configurations.releaseJars.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
+// configure the maven publication
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			// add all the jars that should be included when publishing to maven
+			artifact(jar) {
+				builtBy remapJar
+			}
+			artifact(sourcesJar) {
+				builtBy remapSourcesJar
+			}
+		}
+	}
+
+	// select the repositories you want to publish to
+	repositories {
+		// uncomment to publish to the local maven
+		// mavenLocal()
+	}
+}

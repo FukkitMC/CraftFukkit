@@ -1,0 +1,28 @@
+{
+  "required": true,
+  "package": "com.github.fukkitmc.fukkit.mixin.net.minecraft.world",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "explosion.ExplosionMixin",
+    "biome.source.BiomeArrayMixin",
+    "border.WorldBorderMixin",
+    "chunk.WorldChunkMixin",
+    "dimension.DimensionMixin",
+    "dimension.DimensionTypeMixin",
+    "dimension.TheEndDimensionMixin",
+    "dimension.OverworldDimensionMixin",
+    "dimension.TheNetherDimensionMixin",
+    "level.LevelPropertiesMixin",
+    "BlockViewMixin",
+    "ChunkRegionMixin",
+    "PortalForcerMixin",
+    "WorldMixin",
+    "WorldSaveHandlerMixin"
+  ],
+  "injectors": {
+    "injectionPoints": [
+      "com.github.fukkitmc.fukkit.injectors.GenericOpcode"
+    ],
+    "defaultRequire": 1
+  }
+}

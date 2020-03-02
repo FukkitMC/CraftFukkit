@@ -1,0 +1,33 @@
+{
+  "required": true,
+  "package": "com.github.fukkitmc.fukkit.mixin.net.minecraft",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "advancement.AdvancementManagerMixin",
+    "advancement.AdvancementMixin",
+    "advancement.PlayerAdvancementTrackerMixin",
+    "command.arguments.BlockArgumentParserMixin",
+    "command.arguments.EntityArgumentTypeMixin",
+    "command.EntitySelectorReaderMixin",
+    "datafixer.fix.ItemInstanceMapIdFixMixin",
+    "datafixer.fix.ItemInstanceTheFlatteningFixMixin",
+    "enchantment.EnchantmentsMixin",
+    "enchantment.FrostWalkerEnchantmentMixin",
+    "entity.decoration.AbstractDecorationEntityMixin",
+    "entity.mob.MobEntityMixin",
+    "entity.player.PlayerEntityMixin",
+    "entity.projectile.AbstractFireBallEntityMixin",
+    "entity.EntityMixin",
+    "entity.LivingEntityMixin",
+    "fluid.BaseFluidMixin",
+    "fluid.LavaFluidMixin",
+    "inventory.BasicInventoryMixin",
+    "inventory.CraftingInventoryMixin"
+  ],
+  "injectors": {
+    "injectionPoints": [
+      "com.github.fukkitmc.fukkit.injectors.GenericOpcode"
+    ],
+    "defaultRequire": 1
+  }
+}
