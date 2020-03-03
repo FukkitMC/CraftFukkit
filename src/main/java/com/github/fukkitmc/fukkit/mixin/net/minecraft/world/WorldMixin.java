@@ -144,7 +144,7 @@ public abstract class WorldMixin implements IWorld {
 	public ChunkGenerator generator;
 	public boolean captureBlockStates = false;
 	public boolean captureTreeGeneration = false;
-	public ArrayList<CraftBlockState> capturedBlockStates = new BlockStateArrayList();
+	public BlockStateArrayList capturedBlockStates = new BlockStateArrayList();
 	public List<ItemEntity> captureDrops;
 	public long ticksPerAnimalSpawns;
 	public long ticksPerMonsterSpawns;
@@ -440,7 +440,7 @@ public abstract class WorldMixin implements IWorld {
 		this.captureTreeGeneration = captureTreeGen;
 	}
 
-	public List<CraftBlockState> fukkit$getCapturedStates() {
+	public BlockStateArrayList fukkit$getCapturedStates() {
 		return this.capturedBlockStates;
 	}
 

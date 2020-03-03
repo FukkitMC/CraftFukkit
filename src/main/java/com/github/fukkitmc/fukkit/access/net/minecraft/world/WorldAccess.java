@@ -1,6 +1,7 @@
 package com.github.fukkitmc.fukkit.access.net.minecraft.world;
 
 import com.github.fukkitmc.fukkit.access.CraftHandled;
+import com.github.fukkitmc.fukkit.util.craftbukkit.BlockStateArrayList;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.ItemEntity;
@@ -33,7 +34,7 @@ public interface WorldAccess extends CraftHandled<CraftWorld> {
 	void setCaptureBlockStates(boolean captureBlockStates);
 	boolean capturesTreeGen();
 	void setCaptureTreeGen(boolean captureTreeGen);
-	List<CraftBlockState> getCapturedStates();
+	BlockStateArrayList getCapturedStates();
 	boolean isPopulating();
 	void setPopulating(boolean populating);
 	boolean initialized();
