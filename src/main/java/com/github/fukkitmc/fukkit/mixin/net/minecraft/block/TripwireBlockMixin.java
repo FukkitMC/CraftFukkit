@@ -18,7 +18,7 @@ import java.util.List;
 
 @Mixin (TripwireBlock.class)
 public class TripwireBlockMixin {
-	@Inject (method = "updatePowered", at = @At (value = "INVOKE", target = "Lnet/minecraft/block/BlockState;with(Lnet/minecraft/state/property/Property;Ljava/lang/Comparable;)Ljava/lang/Object;"), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
+	@Inject (method = "updatePowered", at = @At (value = "JUMP", ordinal = 1, shift = At.Shift.AFTER), locals = LocalCapture.PRINT, cancellable = true)
 	private void fukkit_interactEvent(World world, BlockPos pos, CallbackInfo ci, BlockState state, boolean powered, boolean shouldPower, List<? extends Entity> list) {
 		if (shouldPower) { // powered != shouldPower is handled above
 			org.bukkit.World bworld = ((WorldAccess) world).getBukkit();

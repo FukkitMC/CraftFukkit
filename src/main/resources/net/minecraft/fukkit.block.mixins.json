@@ -74,7 +74,13 @@
     "SweetBerryBushBlockMixin",
     "TallPlantBlockMixin",
     "TntBlockMixin",
-    "TrapdoorBlockMixin"
+    "TrapdoorBlockMixin",
+    "TripwireBlockMixin",
+    "TripwireHookBlockMixin",
+    "TurtleEggBlockMixin",
+    "VineBlockMixin",
+    "WeightedPressurePlateBlockMixin",
+    "WitherSkullBlockMixin"
   ],
   "injectors": {
     "injectionPoints": [
