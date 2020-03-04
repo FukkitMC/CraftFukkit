@@ -27,7 +27,7 @@ public class StemBlockMixin {
 	}
 
 	@Inject (method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z", ordinal = 0), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_growEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci, float f, Direction direction, BlockPos pos1) {
+	private void fukkit_growEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci, Direction direction, BlockPos pos1) {
 		if(!CraftEventFactory.handleBlockGrowEvent(world, pos1, this.gourdBlock.getDefaultState()))
 			ci.cancel();
 	}
