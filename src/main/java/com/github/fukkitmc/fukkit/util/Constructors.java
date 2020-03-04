@@ -98,7 +98,7 @@ public class Constructors {
 		access.setTicksSpawnMonsterSpawns(access.getBukkitServer().getTicksPerMonsterSpawns());
 		net.minecraft.world.gen.chunk.ChunkGenerator<?> gen;
 		if(generator != null) {
-			gen = new CustomChunkGenerator(world, world.getSeed(), generator);
+			gen = new CustomChunkGenerator(world, generator);
 			access.setChunkManager(new ServerChunkManager(world, worldSaveHandler.getWorldDir(), worldSaveHandler.getDataFixer(), worldSaveHandler.getStructureManager(), workerExecutor, gen, server.getPlayerManager().getViewDistance(), worldGenerationProgressListener, () -> server.getWorld(DimensionType.OVERWORLD).getPersistentStateManager()));
 		}
 		return world;
@@ -113,7 +113,7 @@ public class Constructors {
 		access.setTicksSpawnMonsterSpawns(access.getBukkitServer().getTicksPerMonsterSpawns());
 		net.minecraft.world.gen.chunk.ChunkGenerator<?> gen;
 		if(generator != null) {
-			gen = new CustomChunkGenerator(world, world.getSeed(), generator);
+			gen = new CustomChunkGenerator(world, generator);
 			access.setChunkManager(new ServerChunkManager(world, worldSaveHandler.getWorldDir(), worldSaveHandler.getDataFixer(), worldSaveHandler.getStructureManager(), workerExecutor, gen, server.getPlayerManager().getViewDistance(), worldGenerationProgressListener, () -> server.getWorld(DimensionType.OVERWORLD).getPersistentStateManager()));
 		}
 		return world;
