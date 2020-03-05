@@ -60,6 +60,9 @@ public class Constructors {
 			LEVELGENERATORTYPE_I_STRING = LevelGeneratorType.class.getDeclaredConstructor(int.class, String.class);
 			DIMENSION_TYPE_CONSTRUCTOR = DimensionType.class.getDeclaredConstructor(int.class, String.class, String.class, BiFunction.class, boolean.class, BiomeAccessType.class);
 			COMPOSTER_BLOCK_DUMMY_INVENTORY_CONSTRUCTOR = findInnerClassConstructor(ComposterBlock.class, "DummyInventory");
+			LEVELGENERATORTYPE_I_STRING.setAccessible(true);
+			DIMENSION_TYPE_CONSTRUCTOR.setAccessible(true);
+			COMPOSTER_BLOCK_DUMMY_INVENTORY_CONSTRUCTOR.setAccessible(true);
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}

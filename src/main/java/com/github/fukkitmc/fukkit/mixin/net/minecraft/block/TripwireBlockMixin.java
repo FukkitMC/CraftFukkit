@@ -14,12 +14,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+import java.util.Iterator;
 import java.util.List;
 
 @Mixin (TripwireBlock.class)
 public class TripwireBlockMixin {
 	@Inject (method = "updatePowered", at = @At (value = "JUMP", ordinal = 1, shift = At.Shift.AFTER), locals = LocalCapture.PRINT, cancellable = true)
-	private void fukkit_interactEvent(World world, BlockPos pos, CallbackInfo ci, BlockState state, boolean powered, boolean shouldPower, List<? extends Entity> list) {
+	private void fukkit_interactEvent(World world, BlockPos pos, CallbackInfo ci, BlockState state, boolean powered, boolean shouldPower, List<? extends Entity> list, Iterator<?> var7) {
 		if (shouldPower) { // powered != shouldPower is handled above
 			org.bukkit.World bworld = ((WorldAccess) world).getBukkit();
 			org.bukkit.plugin.PluginManager manager = ((WorldAccess) world).getBukkitServer().getPluginManager();

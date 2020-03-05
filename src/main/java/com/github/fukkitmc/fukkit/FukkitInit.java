@@ -3,10 +3,10 @@ package com.github.fukkitmc.fukkit;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.world.ChunkTicketType;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.spongepowered.asm.mixin.MixinEnvironment;
 
 // prior to contributing to fukkit
 // watch this gif for 1 hr straight
@@ -39,7 +39,16 @@ public class FukkitInit implements ModInitializer {
         log(Level.WARN, "Initializing");
         if(FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT)
             LOGGER.warn("Warning, clients are not supported, loading multiple worlds at once might cause issues!");
+	    initializeMixinAddedField();
     }
+
+	public void initializeMixinAddedField() {
+		try {
+			ChunkTicketType.class.getField("PLUGIN").set(null, ChunkTicketType.create("plugin",(a, b)-> 0));
+		} catch (IllegalAccessException | NoSuchFieldException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
     public static void log(Level level, String message){
         LOGGER.log(level, "["+MOD_NAME+"] " + message);

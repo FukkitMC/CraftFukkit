@@ -51,6 +51,7 @@ import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.WeatherType;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.server.MapInitializeEvent;
@@ -137,6 +138,9 @@ public abstract class ServerWorldMixin extends WorldMixin {
 
 	@Inject (method = "<init>", at = @At ("TAIL"))
 	private void fukkit_pvp(MinecraftServer server, Executor workerExecutor, WorldSaveHandler worldSaveHandler, LevelProperties properties, DimensionType dimensionType, Profiler profiler, WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+		((WorldAccess) this).setBukkit(new CraftWorld(
+				(ServerWorld) (Object)this,generator,dimensionType == DimensionType.OVERWORLD ? org.bukkit.World.Environment.NORMAL :
+				dimensionType== DimensionType.THE_END ? org.bukkit.World.Environment.THE_END : org.bukkit.World.Environment.NETHER));
 		((WorldAccess) this).setPvp(server.isPvpEnabled());
 		((LevelPropertiesAccess) properties).setServerWorld((ServerWorld) (Object) this);
 		this.wanderingTraderManager = ((DimensionTypeAccess) this.dimension.getType()).getType() == DimensionType.OVERWORLD ? new WanderingTraderManager((ServerWorld) (Object) this) : null;

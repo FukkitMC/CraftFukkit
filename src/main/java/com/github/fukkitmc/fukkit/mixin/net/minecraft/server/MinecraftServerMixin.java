@@ -14,6 +14,7 @@ import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.datafixers.DataFixer;
 import it.unimi.dsi.fastutil.longs.LongIterator;
+import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import net.minecraft.command.DataCommandStorage;
 import net.minecraft.entity.boss.BossBarManager;
@@ -71,9 +72,8 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	@Final
 	private Map<DimensionType, ServerWorld> worlds;
 
-	@Final
 	@Shadow
-	private static final Logger LOGGER = null;
+	private static Logger LOGGER;
 
 	@Shadow
 	@Final
@@ -85,6 +85,12 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	@Shadow
 	@Final
 	private LevelStorage levelStorage;
+
+	private static String[] args;
+	@Inject (method = "main(Ljava/lang/String;)V", at=@At("HEAD"), remap = false)
+	private static void onMain(String[] argv, CallbackInfo info){
+		args=argv;
+	}
 
 	public MinecraftServerMixin(String name) {
 		super(name);
@@ -172,7 +178,6 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 
 	@Inject (method = "<init>", at = @At ("TAIL"))
 	public void postInit(File gameDir, Proxy proxy, DataFixer dataFixer, CommandManager commandManager, YggdrasilAuthenticationService authService, MinecraftSessionService sessionService, GameProfileRepository gameProfileRepository, UserCache userCache, WorldGenerationProgressListenerFactory worldGenerationProgressListenerFactory, String levelName, CallbackInfo ci) {
-		this.levelStorage = null;
 		this.worlds = Maps.newLinkedHashMap();
 		this.vanillaCommandDispatcher = commandManager;
 		if (System.console() == null && System.getProperty("jline.terminal") == null) {
@@ -197,6 +202,10 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 				throw new RuntimeException(ex);
 			}
 		}
+		OptionParser parser=new OptionParser();
+		parser.accepts("bukkit-settings").withOptionalArg().ofType(File.class).defaultsTo(new File("bukkit-settings.yml"));
+		parser.accepts("commands-settings").withOptionalArg().ofType(File.class).defaultsTo(new File("commands-settings.yml"));
+		options=parser.parse(args);
 		Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread((MinecraftServer) (Object) this));
 	}
 
@@ -268,7 +277,8 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 			//this.convertWorld(name); // Run conversion now
 			this.upgradeWorld(name);
 			org.bukkit.generator.ChunkGenerator gen = this.server.getGenerator(name);
-			LevelInfo worldsettings = new LevelInfo(seed, this.getDefaultGameMode(), this.shouldGenerateStructures(), this.isHardcore(), Constructors.newLevelGeneratorType(dimension, name));
+
+			LevelInfo worldsettings = new LevelInfo(seed, this.getDefaultGameMode(), this.shouldGenerateStructures(), this.isHardcore(), generatorType);
 			worldsettings.setGeneratorOptions(generatorSettings);
 
 			if (j == 0) {
@@ -427,7 +437,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		this.timeReference = Util.getMeasuringTimeMs();
 		chunkproviderserver.addTicket(ChunkTicketType.START, new ChunkPos(blockposition), 11, Unit.INSTANCE);
 
-		while (chunkproviderserver.getTotalChunksLoadedCount() != 441) {
+		while (chunkproviderserver.getTotalChunksLoadedCount() < 441) {
 			// CraftBukkit start
 			// this.nextTick = SystemUtils.getMonotonicMillis() + 10L;
 			this.executeModerately();

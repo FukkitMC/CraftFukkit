@@ -13,6 +13,10 @@ import net.minecraft.world.chunk.WorldChunk;
 import org.bukkit.Chunk;
 import org.bukkit.craftbukkit.CraftChunk;
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
 import java.util.Map;
 
 @Implements (@Interface (iface = WorldChunkAccess.class, prefix = "fukkit$"))
@@ -33,7 +37,7 @@ public abstract class WorldChunkMixin {
 	@Shadow
 	public abstract BlockEntity getBlockEntity(BlockPos pos, WorldChunk.CreationType creationType);
 
-	private Chunk chunk = new CraftChunk((WorldChunk) (Object) this);
+	private Chunk chunk = null;
 	private boolean mustNotSave;
 	private boolean needsDecoration = true;
 
@@ -59,6 +63,11 @@ public abstract class WorldChunkMixin {
 
 	public void fukkit$setNeedsDecoration(boolean object) {
 		this.needsDecoration = object;
+	}
+
+	@Inject(method = "<init>*", at = @At("TAIL"))
+	private void onInit(CallbackInfo ci){
+		chunk=new CraftChunk((WorldChunk) (Object) this);
 	}
 
 	public BlockState fukkit$setType(BlockPos pos, BlockState state, boolean flag, boolean doPlace) {
