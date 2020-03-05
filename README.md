@@ -4,6 +4,8 @@ fabric craftbukkit implementation, now with 100% less recompilation errors
 # Contributing
 Fukkit is GPLv3 because craftbukkit is GPL
 
+Don't worry about the quality of your mixins, after all of the patches are ported, I'll go back and refine all of them, the first and for most priority is making it all work
+
 # Mixin
 - all mixin methods must be prefixed with "fukkit_"
 - if 1 injector replaces multiple lines of patches at once, it must be commented with "X birds with 1 stone", or something similar
@@ -11,10 +13,10 @@ Fukkit is GPLv3 because craftbukkit is GPL
 - mixins must be postfixed with Mixin, (XMixin, ex. EntityMixin), and all duck interfaces and accessor mixins must be postfixed with Access, (ex. EntityAccess)
 - all mixins and duck interfaces must belong in the relative package with their minecraft namespace accoriding to the yarn mappings
 at the time they were written
+- documentation is optional, craftbukkit isn't documented either, but it's always nice
 
 # It doesn't run!
-yea its not done yet, just port the patches verbatim for now until it's fixed
-
+yea its not done yet, just port the patches verbatim for now until it's done
 the gradle script is very hacky atm to solve a linkage error, but it works so don't touch it ;)
 
 # Porting Patches
