@@ -14,7 +14,6 @@ import com.mojang.authlib.minecraft.MinecraftSessionService;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.datafixers.DataFixer;
 import it.unimi.dsi.fastutil.longs.LongIterator;
-import jline.console.ConsoleReader;
 import joptsimple.OptionSet;
 import net.minecraft.command.DataCommandStorage;
 import net.minecraft.entity.boss.BossBarManager;
@@ -22,7 +21,6 @@ import net.minecraft.server.*;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.CommandOutput;
 import net.minecraft.server.world.ChunkTicketType;
-import net.minecraft.server.world.SecondaryServerWorld;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -48,6 +46,7 @@ import org.bukkit.World;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.Main;
+import org.bukkit.craftbukkit.libs.jline.console.ConsoleReader;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
@@ -182,6 +181,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		}
 
 		try {
+			//Class.forName("org.fusesource.jansi.WindowsAnsiOutputStream");
 			this.reader = new ConsoleReader(System.in, System.out);
 			this.reader.setExpandEvents(false); // Avoid parsing exceptions for uncommonly used event designators
 		} catch (Throwable e) {
@@ -194,6 +194,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 				this.reader.setExpandEvents(false);
 			} catch (IOException ex) {
 				FukkitInit.LOGGER.warn(ex);
+				throw new RuntimeException(ex);
 			}
 		}
 		Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread((MinecraftServer) (Object) this));
