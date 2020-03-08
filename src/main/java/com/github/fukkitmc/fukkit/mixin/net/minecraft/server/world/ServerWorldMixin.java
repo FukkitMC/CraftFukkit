@@ -31,6 +31,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ProgressListener;
 import net.minecraft.util.math.BlockPos;
@@ -41,6 +42,7 @@ import net.minecraft.world.WanderingTraderManager;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSaveHandler;
 import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkManager;
 import net.minecraft.world.chunk.ChunkStatus;
 import net.minecraft.world.chunk.WorldChunk;
 import net.minecraft.world.dimension.DimensionType;
@@ -135,6 +137,9 @@ public abstract class ServerWorldMixin extends WorldMixin {
 
 	// mixin doesn't recognize the normal World#thread :irritatered:
 	private Thread mixin_pls;
+	public ServerChunkManager getChunkProvider(){
+		return (ServerChunkManager) getChunkManager();
+	}
 
 	@Inject (method = "<init>", at = @At ("TAIL"))
 	private void fukkit_pvp(MinecraftServer server, Executor workerExecutor, WorldSaveHandler worldSaveHandler, LevelProperties properties, DimensionType dimensionType, Profiler profiler, WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {

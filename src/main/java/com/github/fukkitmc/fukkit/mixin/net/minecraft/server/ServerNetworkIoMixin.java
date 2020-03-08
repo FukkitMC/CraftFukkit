@@ -15,10 +15,10 @@ import java.util.List;
 public abstract class ServerNetworkIoMixin {
 	@Shadow @Final private List<ChannelFuture> channels;
 
-	@Redirect(method = "bind", at = @At(value = "INVOKE", target = "Lio/netty/bootstrap/ServerBootstrap;bind()Lio/netty/channel/ChannelFuture;", remap = false))
-	public ChannelFuture bind(ServerBootstrap bootstrap) {
-		return bootstrap.option(ChannelOption.AUTO_READ, false).bind();
-	}
+//	@Redirect(method = "bind", at = @At(value = "INVOKE", target = "Lio/netty/bootstrap/ServerBootstrap;bind()Lio/netty/channel/ChannelFuture;", remap = false))
+//	public ChannelFuture bind(ServerBootstrap bootstrap) {
+//		return bootstrap.option(ChannelOption.AUTO_READ, false).bind();
+//	}
 
 	public void fukkit$acceptConnections() {
 		synchronized (this.channels) {

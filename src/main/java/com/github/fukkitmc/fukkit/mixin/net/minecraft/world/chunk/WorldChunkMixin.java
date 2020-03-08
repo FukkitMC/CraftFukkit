@@ -37,16 +37,16 @@ public abstract class WorldChunkMixin {
 	@Shadow
 	public abstract BlockEntity getBlockEntity(BlockPos pos, WorldChunk.CreationType creationType);
 
-	private Chunk chunk = null;
+	public Chunk bukkitChunk = null;
 	private boolean mustNotSave;
 	private boolean needsDecoration = true;
 
 	public Object fukkit$getBukkit() {
-		return this.chunk;
+		return this.bukkitChunk;
 	}
 
 	public void fukkit$setBukkit(Object object) {
-		this.chunk = (Chunk) object;
+		this.bukkitChunk = (Chunk) object;
 	}
 
 	public boolean fukkit$getMustNotSave() {
@@ -67,7 +67,7 @@ public abstract class WorldChunkMixin {
 
 	@Inject(method = "<init>*", at = @At("TAIL"))
 	private void onInit(CallbackInfo ci){
-		chunk=new CraftChunk((WorldChunk) (Object) this);
+		bukkitChunk=new CraftChunk((WorldChunk) (Object) this);
 	}
 
 	public BlockState fukkit$setType(BlockPos pos, BlockState state, boolean flag, boolean doPlace) {

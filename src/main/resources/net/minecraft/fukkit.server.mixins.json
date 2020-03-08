@@ -10,6 +10,7 @@
     "server.world.SecondaryServerWorldMixin",
     "server.world.ServerWorldMixin",
     "server.world.ThreadedAnvilChunkStorageMixin",
+	"server.world.ServerChunkManagerMixin",
     "server.MinecraftServerMixin",
     "server.PlayerManagerMixin",
     "server.ServerNetworkIoMixin"

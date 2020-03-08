@@ -39,6 +39,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.craftbukkit.entity.CraftItem;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.craftbukkit.util.CraftVector;
 import org.bukkit.entity.HumanEntity;
@@ -128,6 +129,10 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 	protected boolean fauxSleeping;
 	protected String spawnWorld;
 	protected int oldLevel = -1;
+
+	public CraftPlayer getBukkitEntity(){
+		return (CraftPlayer) this.fukkit$getBukkit();
+	}
 
 	@Redirect (method = "updateTurtleHelmet", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addStatusEffect(Lnet/minecraft/entity/effect/StatusEffectInstance;)Z"))
 	private boolean fukkit_addEffect(PlayerEntity entity, StatusEffectInstance effect) {

@@ -22,8 +22,7 @@ public class WorldSaveHandlerMixin {
 	@Final
 	private File playerDataDir;
 	@Shadow
-	@Final
-	private static final Logger LOGGER = null;
+	private static Logger LOGGER;
 	@Shadow @Final private File worldDir;
 	private UUID uuid;
 

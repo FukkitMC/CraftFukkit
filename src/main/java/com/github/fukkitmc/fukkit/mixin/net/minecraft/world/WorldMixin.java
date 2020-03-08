@@ -157,6 +157,14 @@ public abstract class WorldMixin implements IWorld {
 		this.getWorldBorder().addListener(new CraftWorldBorderListener((World) (Object) this));
 	}
 
+	public CraftWorld getCraftWorld(){
+		return this.world;
+	}
+
+	public CraftServer getCraftServer(){
+		return (CraftServer) Bukkit.getServer();
+	}
+
 	@Inject (method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z", at = @At ("HEAD"))
 	private void fukkit_captureStates(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<Boolean> cir) {
 		if (this.captureTreeGeneration) {

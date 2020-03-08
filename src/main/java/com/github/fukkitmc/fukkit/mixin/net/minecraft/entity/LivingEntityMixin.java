@@ -434,14 +434,14 @@ public abstract class LivingEntityMixin extends EntityMixin {
 		}
 	}
 
-	@Inject (method = "getHealth", at = @At ("HEAD"))
+	@Inject (method = "getHealth", at = @At ("HEAD"), cancellable = true)
 	private void fukkit_unscaled(CallbackInfoReturnable<Float> cir) {
 		if ((Object) this instanceof ServerPlayerEntity) {
 			cir.setReturnValue((float) ((ServerPlayerEntityAccess) this).getBukkit().getHealth());
 		}
 	}
 
-	@Inject (method = "setHealth", at = @At ("HEAD"))
+	@Inject (method = "setHealth", at = @At ("HEAD"), cancellable = true)
 	private void fukkit_scaledHealth(float health, CallbackInfo ci) {
 		if ((Object) this instanceof ServerPlayerEntity) {
 			CraftPlayer player = ((ServerPlayerEntityAccess) this).getBukkit();

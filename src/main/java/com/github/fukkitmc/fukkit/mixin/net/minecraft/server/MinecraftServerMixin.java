@@ -175,6 +175,13 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	public File bukkitDataPackFolder;
 	public CommandManager vanillaCommandDispatcher;
 	private boolean forceTicks;
+	private boolean hasStopped = false;
+	private final Object stopLock = new Object();
+	public final boolean hasStopped(){
+		synchronized (stopLock){
+			return hasStopped;
+		}
+	}
 
 	@Inject (method = "<init>", at = @At ("TAIL"))
 	public void postInit(File gameDir, Proxy proxy, DataFixer dataFixer, CommandManager commandManager, YggdrasilAuthenticationService authService, MinecraftSessionService sessionService, GameProfileRepository gameProfileRepository, UserCache userCache, WorldGenerationProgressListenerFactory worldGenerationProgressListenerFactory, String levelName, CallbackInfo ci) {
@@ -209,6 +216,16 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		Runtime.getRuntime().addShutdownHook(new org.bukkit.craftbukkit.util.ServerShutdownThread((MinecraftServer) (Object) this));
 	}
 
+	@Inject(method="stop", at=@At("HEAD"))
+	public void onStop(CallbackInfo ci){
+		synchronized (stopLock){
+			hasStopped=true;
+		}
+		if(null != this.server){
+			server.disablePlugins();
+		}
+	}
+
 	@Redirect (method = "upgradeWorld(Ljava/lang/String;)V", at = @At (target = "Lnet/minecraft/server/MinecraftServer;getLevelName()Ljava/lang/String;", value = "INVOKE"))
 	public String getLevelname(MinecraftServer server, String s) { // killing two birds with one
 		return s; // craftbukkit thonk
@@ -219,159 +236,159 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	 *
 	 * @author HalfOf2
 	 */
-	@Overwrite
-	public void loadWorld(String s, String serverName, long seed, LevelGeneratorType generatorType, JsonElement generatorSettings) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-		// this.convertWorld(s); // CraftBukkit - moved down
-		this.setLoadingStage(new TranslatableText("menu.loadingLevel"));
-        /* CraftBukkit start - Remove ticktime arrays and worldsettings
-        WorldNBTStorage worldnbtstorage = this.getConvertable().a(s, this);
-
-        this.a(this.getWorld(), worldnbtstorage);
-        WorldData worlddata = worldnbtstorage.getWorldData();
-        WorldSettings worldsettings;
-
-        if (worlddata == null) {
-            if (this.isDemoMode()) {
-                worldsettings = MinecraftServer.c;
-            } else {
-                worldsettings = new WorldSettings(i, this.getGamemode(), this.getGenerateStructures(), this.isHardcore(), worldtype);
-                worldsettings.setGeneratorSettings(jsonelement);
-                if (this.bonusChest) {
-                    worldsettings.a();
-                }
-            }
-
-            worlddata = new WorldData(worldsettings, s1);
-        } else {
-            worlddata.setName(s1);
-            worldsettings = new WorldSettings(worlddata);
-        }
-
-        this.a(worldnbtstorage.getDirectory(), worlddata);
-        */
-		int worldCount = 3;
-
-		for (int j = 0; j < worldCount; ++j) {
-			ServerWorld world;
-			LevelProperties worlddata;
-			byte dimension = 0;
-
-			if (j == 1) {
-				if (getAllowNether()) {
-					dimension = -1;
-				} else {
-					continue;
-				}
-			}
-
-			if (j == 2) {
-				if (this.server.getAllowEnd()) {
-					dimension = 1;
-				} else {
-					continue;
-				}
-			}
-
-			String worldType = Objects.requireNonNull(World.Environment.getEnvironment(dimension)).toString().toLowerCase();
-			String name = (dimension == 0) ? s : s + "_" + worldType;
-			//this.convertWorld(name); // Run conversion now
-			this.upgradeWorld(name);
-			org.bukkit.generator.ChunkGenerator gen = this.server.getGenerator(name);
-
-			LevelInfo worldsettings = new LevelInfo(seed, this.getDefaultGameMode(), this.shouldGenerateStructures(), this.isHardcore(), generatorType);
-			worldsettings.setGeneratorOptions(generatorSettings);
-
-			if (j == 0) {
-				WorldSaveHandler worldnbtstorage = new WorldSaveHandler(this.server.getWorldContainer(), serverName, (MinecraftServer) (Object) this, this.dataFixer);
-				worlddata = worldnbtstorage.readProperties();
-				if (worlddata == null) {
-					worlddata = new LevelProperties(worldsettings, serverName);
-				}
-				((LevelPropertiesAccess) worlddata).checkName(serverName); // CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
-				this.loadWorldDataPacks(worldnbtstorage.getWorldDir(), worlddata);
-				WorldGenerationProgressListener worldloadlistener = this.worldGenerationProgressListenerFactory.create(11);
-
-				if (this.isDemo()) {
-					worlddata.loadLevelInfo(MinecraftServer.DEMO_LEVEL_INFO);
-				}
-				world = Constructors.newWorld((MinecraftServer) (Object) this, this.workerExecutor, worldnbtstorage, worlddata, DimensionType.OVERWORLD, this.profiler, worldloadlistener, gen, World.Environment.getEnvironment(dimension));
-
-				PersistentStateManager worldpersistentdata = world.getPersistentStateManager();
-				this.initScoreboard(worldpersistentdata);
-				this.server.scoreboardManager = new org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager((MinecraftServer) (Object) this, world.getScoreboard());
-				this.dataCommandStorage = new DataCommandStorage(worldpersistentdata);
-			} else {
-				String dim = "DIM" + dimension;
-
-				File newWorld = new File(new File(name), dim);
-				File oldWorld = new File(new File(s), dim);
-				File oldLevelDat = new File(new File(s), "level.dat"); // The data folders exist on first run as they are created in the PersistentCollection constructor above, but the level.dat won't
-
-				if (!newWorld.isDirectory() && oldWorld.isDirectory() && oldLevelDat.isFile()) {
-
-					LOGGER.info("---- Migration of old " + worldType + " folder required ----");
-					LOGGER.info("Unfortunately due to the way that Minecraft implemented multiworld support in 1.6, Bukkit requires that you move your " + worldType + " folder to a new location in order to operate correctly.");
-					LOGGER.info("We will move this folder for you, but it will mean that you need to move it back should you wish to stop using Bukkit in the future.");
-					LOGGER.info("Attempting to move " + oldWorld + " to " + newWorld + "...");
-
-					if (newWorld.exists()) {
-						LOGGER.warn("A file or folder already exists at " + newWorld + "!");
-						LOGGER.info("---- Migration of old " + worldType + " folder failed ----");
-					} else if (newWorld.getParentFile().mkdirs()) {
-						if (oldWorld.renameTo(newWorld)) {
-							LOGGER.info("Success! To restore " + worldType + " in the future, simply move " + newWorld + " to " + oldWorld);
-							// Migrate world data too.
-							try {
-								com.google.common.io.Files.copy(oldLevelDat, new File(new File(name), "level.dat"));
-								org.apache.commons.io.FileUtils.copyDirectory(new File(new File(s), "data"), new File(new File(name), "data"));
-							} catch (IOException exception) {
-								LOGGER.warn("Unable to migrate world data.");
-							}
-							LOGGER.info("---- Migration of old " + worldType + " folder complete ----");
-						} else {
-							LOGGER.warn("Could not move folder " + oldWorld + " to " + newWorld + "!");
-							LOGGER.info("---- Migration of old " + worldType + " folder failed ----");
-						}
-					} else {
-						LOGGER.warn("Could not create path for " + newWorld + "!");
-						LOGGER.info("---- Migration of old " + worldType + " folder failed ----");
-					}
-				}
-
-				WorldSaveHandler worldnbtstorage = new WorldSaveHandler(server.getWorldContainer(), name, (MinecraftServer) (Object) this, this.dataFixer);
-				// world =, b0 to dimension, s1 to name, added Environment and gen
-				worlddata = worldnbtstorage.readProperties();
-				if (worlddata == null) {
-					worlddata = new LevelProperties(worldsettings, name);
-				}
-
-				((LevelPropertiesAccess) worlddata).checkName(name);// CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
-				WorldGenerationProgressListener worldloadlistener = this.worldGenerationProgressListenerFactory.create(11);
-				world = Constructors.newWorld2nd(this.getWorld(DimensionType.OVERWORLD), (MinecraftServer) (Object) this, this.workerExecutor, worldnbtstorage, DimensionType.byRawId(dimension), this.profiler, worldloadlistener, gen, World.Environment.getEnvironment(dimension));
-			}
-
-
-			this.initWorld(world, worlddata, worldsettings);
-			this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldInitEvent(((WorldAccess) world).getBukkit()));
-			this.worlds.put(world.getDimension().getType(), world);
-			this.playerManager.setMainWorld(world);
-
-
-			if (worlddata.getCustomBossEvents() != null) {
-				this.getBossBarManager().fromTag(worlddata.getCustomBossEvents());
-			}
-		}
-		this.setDifficulty(this.getDefaultDifficulty(), true);
-		for (ServerWorld worldserver : this.getWorlds()) {
-			this.loadSpawn(((ThreadedAnvilChunkStorageAccess) worldserver.getChunkManager().threadedAnvilChunkStorage).getListener(), worldserver);
-			this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldLoadEvent(((WorldAccess) worldserver).getBukkit()));
-		}
-
-		this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD);
-		this.server.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.STARTUP));
-		((ServerNetworkIoAccess) this.networkIo).acceptConnections();
-		// CraftBukkit end
-	}
+//	@Overwrite
+//	public void loadWorld(String s, String serverName, long seed, LevelGeneratorType generatorType, JsonElement generatorSettings) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+//		// this.convertWorld(s); // CraftBukkit - moved down
+//		this.setLoadingStage(new TranslatableText("menu.loadingLevel"));
+//        /* CraftBukkit start - Remove ticktime arrays and worldsettings
+//        WorldNBTStorage worldnbtstorage = this.getConvertable().a(s, this);
+//
+//        this.a(this.getWorld(), worldnbtstorage);
+//        WorldData worlddata = worldnbtstorage.getWorldData();
+//        WorldSettings worldsettings;
+//
+//        if (worlddata == null) {
+//            if (this.isDemoMode()) {
+//                worldsettings = MinecraftServer.c;
+//            } else {
+//                worldsettings = new WorldSettings(i, this.getGamemode(), this.getGenerateStructures(), this.isHardcore(), worldtype);
+//                worldsettings.setGeneratorSettings(jsonelement);
+//                if (this.bonusChest) {
+//                    worldsettings.a();
+//                }
+//            }
+//
+//            worlddata = new WorldData(worldsettings, s1);
+//        } else {
+//            worlddata.setName(s1);
+//            worldsettings = new WorldSettings(worlddata);
+//        }
+//
+//        this.a(worldnbtstorage.getDirectory(), worlddata);
+//        */
+//		int worldCount = 3;
+//
+//		for (int j = 0; j < worldCount; ++j) {
+//			ServerWorld world;
+//			LevelProperties worlddata;
+//			byte dimension = 0;
+//
+//			if (j == 1) {
+//				if (getAllowNether()) {
+//					dimension = -1;
+//				} else {
+//					continue;
+//				}
+//			}
+//
+//			if (j == 2) {
+//				if (this.server.getAllowEnd()) {
+//					dimension = 1;
+//				} else {
+//					continue;
+//				}
+//			}
+//
+//			String worldType = Objects.requireNonNull(World.Environment.getEnvironment(dimension)).toString().toLowerCase();
+//			String name = (dimension == 0) ? s : s + "_" + worldType;
+//			//this.convertWorld(name); // Run conversion now
+//			this.upgradeWorld(name);
+//			org.bukkit.generator.ChunkGenerator gen = this.server.getGenerator(name);
+//
+//			LevelInfo worldsettings = new LevelInfo(seed, this.getDefaultGameMode(), this.shouldGenerateStructures(), this.isHardcore(), generatorType);
+//			worldsettings.setGeneratorOptions(generatorSettings);
+//
+//			if (j == 0) {
+//				WorldSaveHandler worldnbtstorage = new WorldSaveHandler(this.server.getWorldContainer(), serverName, (MinecraftServer) (Object) this, this.dataFixer);
+//				worlddata = worldnbtstorage.readProperties();
+//				if (worlddata == null) {
+//					worlddata = new LevelProperties(worldsettings, serverName);
+//				}
+//				((LevelPropertiesAccess) worlddata).checkName(serverName); // CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
+//				this.loadWorldDataPacks(worldnbtstorage.getWorldDir(), worlddata);
+//				WorldGenerationProgressListener worldloadlistener = this.worldGenerationProgressListenerFactory.create(11);
+//
+//				if (this.isDemo()) {
+//					worlddata.loadLevelInfo(MinecraftServer.DEMO_LEVEL_INFO);
+//				}
+//				world = Constructors.newWorld((MinecraftServer) (Object) this, this.workerExecutor, worldnbtstorage, worlddata, DimensionType.OVERWORLD, this.profiler, worldloadlistener, gen, World.Environment.getEnvironment(dimension));
+//
+//				PersistentStateManager worldpersistentdata = world.getPersistentStateManager();
+//				this.initScoreboard(worldpersistentdata);
+//				this.server.scoreboardManager = new org.bukkit.craftbukkit.scoreboard.CraftScoreboardManager((MinecraftServer) (Object) this, world.getScoreboard());
+//				this.dataCommandStorage = new DataCommandStorage(worldpersistentdata);
+//			} else {
+//				String dim = "DIM" + dimension;
+//
+//				File newWorld = new File(new File(name), dim);
+//				File oldWorld = new File(new File(s), dim);
+//				File oldLevelDat = new File(new File(s), "level.dat"); // The data folders exist on first run as they are created in the PersistentCollection constructor above, but the level.dat won't
+//
+//				if (!newWorld.isDirectory() && oldWorld.isDirectory() && oldLevelDat.isFile()) {
+//
+//					LOGGER.info("---- Migration of old " + worldType + " folder required ----");
+//					LOGGER.info("Unfortunately due to the way that Minecraft implemented multiworld support in 1.6, Bukkit requires that you move your " + worldType + " folder to a new location in order to operate correctly.");
+//					LOGGER.info("We will move this folder for you, but it will mean that you need to move it back should you wish to stop using Bukkit in the future.");
+//					LOGGER.info("Attempting to move " + oldWorld + " to " + newWorld + "...");
+//
+//					if (newWorld.exists()) {
+//						LOGGER.warn("A file or folder already exists at " + newWorld + "!");
+//						LOGGER.info("---- Migration of old " + worldType + " folder failed ----");
+//					} else if (newWorld.getParentFile().mkdirs()) {
+//						if (oldWorld.renameTo(newWorld)) {
+//							LOGGER.info("Success! To restore " + worldType + " in the future, simply move " + newWorld + " to " + oldWorld);
+//							// Migrate world data too.
+//							try {
+//								com.google.common.io.Files.copy(oldLevelDat, new File(new File(name), "level.dat"));
+//								org.apache.commons.io.FileUtils.copyDirectory(new File(new File(s), "data"), new File(new File(name), "data"));
+//							} catch (IOException exception) {
+//								LOGGER.warn("Unable to migrate world data.");
+//							}
+//							LOGGER.info("---- Migration of old " + worldType + " folder complete ----");
+//						} else {
+//							LOGGER.warn("Could not move folder " + oldWorld + " to " + newWorld + "!");
+//							LOGGER.info("---- Migration of old " + worldType + " folder failed ----");
+//						}
+//					} else {
+//						LOGGER.warn("Could not create path for " + newWorld + "!");
+//						LOGGER.info("---- Migration of old " + worldType + " folder failed ----");
+//					}
+//				}
+//
+//				WorldSaveHandler worldnbtstorage = new WorldSaveHandler(server.getWorldContainer(), name, (MinecraftServer) (Object) this, this.dataFixer);
+//				// world =, b0 to dimension, s1 to name, added Environment and gen
+//				worlddata = worldnbtstorage.readProperties();
+//				if (worlddata == null) {
+//					worlddata = new LevelProperties(worldsettings, name);
+//				}
+//
+//				((LevelPropertiesAccess) worlddata).checkName(name);// CraftBukkit - Migration did not rewrite the level.dat; This forces 1.8 to take the last loaded world as respawn (in this case the end)
+//				WorldGenerationProgressListener worldloadlistener = this.worldGenerationProgressListenerFactory.create(11);
+//				world = Constructors.newWorld2nd(this.getWorld(DimensionType.OVERWORLD), (MinecraftServer) (Object) this, this.workerExecutor, worldnbtstorage, DimensionType.byRawId(dimension), this.profiler, worldloadlistener, gen, World.Environment.getEnvironment(dimension));
+//			}
+//
+//
+//			this.initWorld(world, worlddata, worldsettings);
+//			this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldInitEvent(((WorldAccess) world).getBukkit()));
+//			this.worlds.put(world.getDimension().getType(), world);
+//			this.playerManager.setMainWorld(world);
+//
+//
+//			if (worlddata.getCustomBossEvents() != null) {
+//				this.getBossBarManager().fromTag(worlddata.getCustomBossEvents());
+//			}
+//		}
+//		this.setDifficulty(this.getDefaultDifficulty(), true);
+//		for (ServerWorld worldserver : this.getWorlds()) {
+//			this.loadSpawn(((ThreadedAnvilChunkStorageAccess) worldserver.getChunkManager().threadedAnvilChunkStorage).getListener(), worldserver);
+//			this.server.getPluginManager().callEvent(new org.bukkit.event.world.WorldLoadEvent(((WorldAccess) worldserver).getBukkit()));
+//		}
+//
+//		this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD);
+//		this.server.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.STARTUP));
+//		((ServerNetworkIoAccess) this.networkIo).acceptConnections();
+//		// CraftBukkit end
+//	}
 
 	public void initWorld(ServerWorld worldserver1, LevelProperties worlddata, LevelInfo worldsettings) {
 		worldserver1.getWorldBorder().load(worlddata);// TODO verify this is infact the right method, and it's not save
@@ -406,13 +423,13 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		}
 	}
 
-	/**
-	 * @author HalfOf2
-	 */
-	@Overwrite
-	public void prepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener) {
-		throw new UnsupportedOperationException("Unsupported, sorry, craftbukkit said so :(");
-	}
+//	/**
+//	 * @author HalfOf2
+//	 */
+//	@Overwrite
+//	public void prepareStartRegion(WorldGenerationProgressListener worldGenerationProgressListener) {
+//		throw new UnsupportedOperationException("Unsupported, sorry, craftbukkit said so :(");
+//	}
 
 	// CraftBukkit start
 	public void loadSpawn(WorldGenerationProgressListener worldloadlistener, ServerWorld worldserver) {

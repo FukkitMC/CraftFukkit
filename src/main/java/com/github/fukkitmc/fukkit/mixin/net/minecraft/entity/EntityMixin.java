@@ -38,6 +38,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.bukkit.craftbukkit.inventory.CraftItemStack;
 import org.bukkit.entity.Hanging;
@@ -385,7 +386,7 @@ public abstract class EntityMixin {
 		}
 	}
 
-	@Inject (method = "dropStack(Lnet/minecraft/item/ItemStack;F)Lnet/minecraft/entity/ItemEntity;", at = @At (value = "NEW", target = "net/minecraft/entity/ItemEntity"))
+	@Inject (method = "dropStack(Lnet/minecraft/item/ItemStack;F)Lnet/minecraft/entity/ItemEntity;", at = @At (value = "NEW", target = "net/minecraft/entity/ItemEntity"),cancellable=true)
 	private void fukkit_captureDrops(ItemStack stack, float yOffset, CallbackInfoReturnable<ItemEntity> cir) {
 		if (((Entity) (Object) this) instanceof LivingEntity && !((LivingEntityAccess) this).shouldForceDrops()) {
 			((LivingEntityAccess) this).getDrops().add(CraftItemStack.asBukkitCopy(stack));
@@ -637,6 +638,13 @@ public abstract class EntityMixin {
 	}
 
 	public Object fukkit$getBukkit() {
+		if (this.entity == null) {
+			this.entity = CraftEntity.getEntity(((WorldAccess) this.world).getBukkitServer(), (Entity) (Object) this);
+		}
+		return this.entity;
+	}
+
+	public CraftEntity getBukkitEntity(){
 		if (this.entity == null) {
 			this.entity = CraftEntity.getEntity(((WorldAccess) this.world).getBukkitServer(), (Entity) (Object) this);
 		}

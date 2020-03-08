@@ -148,9 +148,6 @@ public abstract class PlayerManagerMixin {
 		return name;
 	}
 
-	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;info(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"))
-	private void fukkit_moveMessage(Logger logger, String message, Object p0, Object p1, Object p2, Object p3, Object p4, Object p5) {}
-
 	@ModifyArg (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/GameJoinS2CPacket;<init>(ILnet/minecraft/world/GameMode;JZLnet/minecraft/world/dimension/DimensionType;ILnet/minecraft/world/level/LevelGeneratorType;IZZ)V"), index = 4)
 	private DimensionType fukkit_getType(DimensionType type) {
 		return ((DimensionTypeAccess) type).getType();
