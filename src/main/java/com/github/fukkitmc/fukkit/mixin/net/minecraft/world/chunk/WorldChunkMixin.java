@@ -29,10 +29,6 @@ public abstract class WorldChunkMixin {
 	private World world;
 	@Shadow
 	private volatile boolean shouldSave;
-
-	@Shadow
-	public abstract BlockEntity getBlockEntity(BlockPos pos, WorldChunk.CreationType creationType);
-
 	private Chunk chunk = new CraftChunk((WorldChunk) (Object) this);
 	private boolean mustNotSave;
 	private boolean needsDecoration = true;
@@ -85,7 +81,8 @@ public abstract class WorldChunkMixin {
 			Block block = state.getBlock();
 			Block block1 = state1.getBlock();
 
-			this.heightmaps.get(Heightmap.Type.MOTION_BLOCKING).trackUpdate(i, j, k, state); // assumed from a -> trackUpdate
+			this.heightmaps.get(Heightmap.Type.MOTION_BLOCKING)
+			               .trackUpdate(i, j, k, state); // assumed from a -> trackUpdate
 			this.heightmaps.get(Heightmap.Type.MOTION_BLOCKING_NO_LEAVES).trackUpdate(i, j, k, state); // ^
 			this.heightmaps.get(Heightmap.Type.OCEAN_FLOOR).trackUpdate(i, j, k, state); // ^
 			this.heightmaps.get(Heightmap.Type.WORLD_SURFACE).trackUpdate(i, j, k, state); // ^
@@ -113,8 +110,10 @@ public abstract class WorldChunkMixin {
 					}
 				}
 
-				// CraftBukkit - Don't place while processing the BlockPlaceEvent, unless it's a BlockContainer. Prevents blocks such as TNT from activating when cancelled.
-				//if (!this.world.isClient && doPlace && (!this.world.captureBlockStates || block instanceof BlockWithEntity)) {
+				// CraftBukkit - Don't place while processing the BlockPlaceEvent, unless it's a BlockContainer.
+				// Prevents blocks such as TNT from activating when cancelled.
+				//if (!this.world.isClient && doPlace && (!this.world.captureBlockStates || block instanceof
+				// BlockWithEntity)) {
 				state.onBlockAdded(this.world, pos, state1, flag);
 				//}
 				// TODO fix
@@ -134,4 +133,7 @@ public abstract class WorldChunkMixin {
 			}
 		}
 	}
+
+	@Shadow
+	public abstract BlockEntity getBlockEntity(BlockPos pos, WorldChunk.CreationType creationType);
 }

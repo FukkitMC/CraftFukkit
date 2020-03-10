@@ -15,17 +15,16 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin (DoorBlock.class)
 public abstract class DoorBlockMixin {
-	@Shadow
-	protected abstract void playOpenCloseSound(World world, BlockPos pos, boolean open);
-
 	/**
 	 * @author HalfOf2
-	 * @reason most of the logic is rewritten, it might be possible to do this without overwrite, but it's 10pm and the patch is big so meh
-	 *
+	 * @reason most of the logic is rewritten, it might be possible to do this without overwrite, but it's 10pm and
+	 * the patch is big so meh
 	 */
 	@Overwrite
-	public void neighborUpdate(BlockState state, World world, BlockPos pos, Block block, BlockPos neighborPos, boolean moved) {
-		BlockPos otherHalf = pos.offset(state.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER ? Direction.UP : Direction.DOWN);
+	public void neighborUpdate(BlockState state, World world, BlockPos pos, Block block, BlockPos neighborPos,
+	                           boolean moved) {
+		BlockPos otherHalf = pos.offset(
+		state.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER ? Direction.UP : Direction.DOWN);
 
 		org.bukkit.World bukkitWorld = ((WorldAccess) world).getBukkit();
 		org.bukkit.block.Block bukkitBlock = bukkitWorld.getBlockAt(pos.getX(), pos.getY(), pos.getZ());
@@ -33,7 +32,7 @@ public abstract class DoorBlockMixin {
 
 		int power = bukkitBlock.getBlockPower();
 		int powerTop = blockTop.getBlockPower();
-		if (powerTop > power) power = powerTop;
+		if (powerTop > power) { power = powerTop; }
 		int oldPower = state.get(DoorBlock.POWERED) ? 15 : 0;
 
 		if (oldPower == 0 ^ power == 0) {
@@ -49,4 +48,7 @@ public abstract class DoorBlockMixin {
 			world.setBlockState(pos, state.with(DoorBlock.POWERED, flag1).with(DoorBlock.OPEN, flag1), 2);
 		}
 	}
+
+	@Shadow
+	protected abstract void playOpenCloseSound(World world, BlockPos pos, boolean open);
 }

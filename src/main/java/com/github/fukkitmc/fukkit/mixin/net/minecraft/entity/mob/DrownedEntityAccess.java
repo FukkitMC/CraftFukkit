@@ -6,8 +6,9 @@ import net.minecraft.entity.mob.DrownedEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(DrownedEntity.class)
+@Mixin (DrownedEntity.class)
 public interface DrownedEntityAccess {
-	@Accessor("waterNavigation") SwimNavigation getWaterNavigation();
-	@Accessor("landNavigation") MobNavigation getLandNavigation();
+	@Accessor ("waterNavigation") SwimNavigation getWaterNavigation();
+
+	@Accessor ("landNavigation") MobNavigation getLandNavigation();
 }

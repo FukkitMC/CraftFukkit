@@ -65,11 +65,24 @@ import java.util.List;
 @Implements (@Interface (iface = PlayerEntityAccess.class, prefix = "fukkit$"))
 @Mixin (PlayerEntity.class)
 public abstract class PlayerEntityMixin extends LivingEntityMixin {
-	@Shadow
-	protected abstract void dropShoulderEntities();
-
-	@Shadow
-	public abstract String getEntityName();
+	@Shadow public int experienceLevel;
+	@Shadow @Final public PlayerInventory inventory;
+	@Shadow @Final public PlayerContainer playerContainer;
+	@Shadow public Container container;
+	@Shadow @Final public PlayerAbilities abilities;
+	@Shadow public float experienceProgress;
+	@Shadow public int totalExperience;
+	@Shadow protected HungerManager hungerManager;
+	// TODO add *this* to EnderChestInventory/HungerManager constructor
+	protected boolean fauxSleeping;
+	protected String spawnWorld;
+	protected int oldLevel = -1;
+	@Shadow private int sleepTimer;
+	private int duration;
+	// assert main thread
+	private Vec3d vec3d;
+	// replace with assert main, and verify recursion
+	private BlockPos bedPos;
 
 	@Shadow
 	public abstract void addExhaustion(float exhaustion);
@@ -83,64 +96,34 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 	@Shadow
 	public abstract BlockPos getSpawnPosition();
 
-	@Shadow public abstract void setPlayerSpawn(BlockPos blockPos, boolean bl, boolean bl2);
-
-	@Shadow public abstract boolean isCreative();
-
-	@Shadow protected abstract boolean isWithinSleepingRange(BlockPos sleepPos, Direction direction);
-
-	@Shadow protected abstract boolean isBedObstructed(BlockPos pos, Direction direction);
-
-	@Shadow private int sleepTimer;
-
-	@Override
-	@Shadow public abstract void sleep(BlockPos pos);
-
-	@Shadow public abstract CompoundTag getShoulderEntityLeft();
-
-	@Shadow protected abstract void setShoulderEntityLeft(CompoundTag entityTag);
-
-	@Shadow public abstract CompoundTag getShoulderEntityRight();
-
-	@Shadow protected abstract void setShoulderEntityRight(CompoundTag entityTag);
-
-	@Shadow public int experienceLevel;
-	@Shadow @Final public PlayerInventory inventory;
-	@Shadow @Final public PlayerContainer playerContainer;
-	@Shadow public Container container;
-	@Shadow @Final public PlayerAbilities abilities;
-
 	@Shadow public abstract void incrementStat(Stat<?> stat);
 
 	@Shadow public abstract void incrementStat(Identifier stat);
 
 	@Shadow public abstract Arm getMainArm();
 
-	@Shadow public float experienceProgress;
-	@Shadow public int totalExperience;
-
 	@Shadow protected native boolean isImmobile();
 
 	@Shadow public abstract Scoreboard getScoreboard();
 
-	@Shadow protected HungerManager hungerManager;
-	// TODO add *this* to EnderChestInventory/HungerManager constructor
-	protected boolean fauxSleeping;
-	protected String spawnWorld;
-	protected int oldLevel = -1;
-
-	@Redirect (method = "updateTurtleHelmet", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;addStatusEffect(Lnet/minecraft/entity/effect/StatusEffectInstance;)Z"))
+	@Redirect (method = "updateTurtleHelmet", at = @At (value = "INVOKE",
+	                                                    target = "Lnet/minecraft/entity/player/PlayerEntity;" +
+	                                                             "addStatusEffect(Lnet/minecraft/entity/effect" +
+	                                                             "/StatusEffectInstance;)Z"))
 	private boolean fukkit_addEffect(PlayerEntity entity, StatusEffectInstance effect) {
 		return ((LivingEntityAccess) this).addEffect(effect, EntityPotionEffectEvent.Cause.TURTLE_HELMET);
 	}
 
-	@Redirect (method = "tickMovement", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;heal(F)V"))
+	@Redirect (method = "tickMovement",
+	           at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;heal(F)V"))
 	private void fukkit_addEffect(PlayerEntity entity, float amount) {
 		((LivingEntityAccess) this).heal(amount, EntityRegainHealthEvent.RegainReason.REGEN);
 	}
 
-	@Inject (method = "dropItem(Lnet/minecraft/item/ItemStack;ZZ)Lnet/minecraft/entity/ItemEntity;", at = @At (value = "RETURN", ordinal = 1))
-	private void fukkit_dropItemEvent(ItemStack stack, boolean bl, boolean bl2, CallbackInfoReturnable<ItemEntity> cir) {
+	@Inject (method = "dropItem(Lnet/minecraft/item/ItemStack;ZZ)Lnet/minecraft/entity/ItemEntity;",
+	         at = @At (value = "RETURN", ordinal = 1))
+	private void fukkit_dropItemEvent(ItemStack stack, boolean bl, boolean bl2,
+	                                  CallbackInfoReturnable<ItemEntity> cir) {
 		HumanEntity player = ((PlayerEntityAccess<?>) this).getBukkit();
 		ItemEntity entity = cir.getReturnValue();
 		Item item = ((EntityAccess<CraftItem>) entity).getBukkit();
@@ -153,7 +136,9 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 			if (bl2 && (cur == null || cur.getAmount() == 0)) {
 				// The complete stack was dropped
 				player.getInventory().setItemInHand(item.getItemStack());
-			} else if (bl2 && cur.isSimilar(item.getItemStack()) && cur.getAmount() < cur.getMaxStackSize() && item.getItemStack().getAmount() == 1) {
+			} else if (bl2 && cur.isSimilar(item.getItemStack()) && cur.getAmount() < cur.getMaxStackSize() && item
+			                                                                                                   .getItemStack()
+			                                                                                                   .getAmount() == 1) {
 				// Only one item is dropped
 				cur.setAmount(cur.getAmount() + 1);
 				player.getInventory().setItemInHand(cur);
@@ -165,7 +150,10 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 		}
 	}
 
-	@Inject (method = "readCustomDataFromTag", at = @At (value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;contains(Ljava/lang/String;I)Z"), slice = @Slice (from = @At (value = "CONSTANT", args = "stringValue=Score"), to = @At (value = "CONSTANT:FIRST", args = "stringValue=SpawnY")))
+	@Inject (method = "readCustomDataFromTag",
+	         at = @At (value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;contains(Ljava/lang/String;I)Z"),
+	         slice = @Slice (from = @At (value = "CONSTANT", args = "stringValue=Score"),
+	                         to = @At (value = "CONSTANT:FIRST", args = "stringValue=SpawnY")))
 	private void fukkit_spawnWorld(CompoundTag tag, CallbackInfo ci) {
 		this.spawnWorld = tag.getString("SpawnWorld");
 		if ("".equals(this.spawnWorld)) {
@@ -183,20 +171,33 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 		((PlayerEntityAccess<?>) this).setForceExplosionKnockback(true);
 	}
 
-	@Redirect (method = "damage", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;dropShoulderEntities()V"))
+	@Redirect (method = "damage", at = @At (value = "INVOKE",
+	                                        target = "Lnet/minecraft/entity/player/PlayerEntity;dropShoulderEntities()" +
+	                                                 "V"))
 	private void fukkit_movedDown(PlayerEntity entity) {}
 
-	@Inject (method = "damage", at = @At (value = "JUMP", ordinal = 0, opcode = Opcodes.IF_ACMPNE, shift = At.Shift.AFTER, by = 1), slice = @Slice (from = @At (value = "INVOKE", target = "Lnet/minecraft/world/World;getDifficulty()Lnet/minecraft/world/Difficulty;", ordinal = 0)), cancellable = true)
+	@Inject (method = "damage",
+	         at = @At (value = "JUMP", ordinal = 0, opcode = Opcodes.IF_ACMPNE, shift = At.Shift.AFTER, by = 1),
+	         slice = @Slice (from = @At (value = "INVOKE",
+	                                     target = "Lnet/minecraft/world/World;getDifficulty()" +
+	                                              "Lnet/minecraft/world/Difficulty;",
+	                                     ordinal = 0)), cancellable = true)
 	private void fukkit_returnFalse(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
 		cir.setReturnValue(false);
 	}
 
-	@Inject (method = "damage", at = @At ("RETURN"), slice = @Slice (from = @At (value = "INVOKE", target = "Lnet/minecraft/world/World;getDifficulty()Lnet/minecraft/world/Difficulty;", ordinal = 2), to = @At ("TAIL")), cancellable = true)
+	@Inject (method = "damage", at = @At ("RETURN"), slice = @Slice (
+	from = @At (value = "INVOKE", target = "Lnet/minecraft/world/World;getDifficulty()" +
+	                                       "Lnet/minecraft/world/Difficulty;",
+	            ordinal = 2), to = @At ("TAIL")), cancellable = true)
 	private void fukkit_dontIgnore(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
 		boolean damaged = super.damage(source, amount);
-		if (damaged) this.dropShoulderEntities();
+		if (damaged) { this.dropShoulderEntities(); }
 		cir.setReturnValue(damaged);
 	}
+
+	@Shadow
+	protected abstract void dropShoulderEntities();
 
 	/**
 	 * the entire method is yeeted, none of the original logic remains
@@ -217,8 +218,10 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 			}
 		} else {
 			// This should never be called, but is implemented anyway
-			org.bukkit.OfflinePlayer thisPlayer = ((WorldAccess) entity.world).getBukkitServer().getOfflinePlayer(entity.getEntityName());
-			team = ((WorldAccess) entity.world).getBukkitServer().getScoreboardManager().getMainScoreboard().getPlayerTeam(thisPlayer);
+			org.bukkit.OfflinePlayer thisPlayer = ((WorldAccess) entity.world).getBukkitServer()
+			                                                                  .getOfflinePlayer(entity.getEntityName());
+			team = ((WorldAccess) entity.world).getBukkitServer().getScoreboardManager().getMainScoreboard()
+			                                   .getPlayerTeam(thisPlayer);
 			if (team == null || team.allowFriendlyFire()) {
 				return true;
 			}
@@ -231,24 +234,15 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 		// CraftBukkit end
 	}
 
-	/**
-	 * todo replace with injects after you verify you've called the correct method everwhere
-	 *
-	 * @author HalfOf2
-	 * @reason method signature change
-	 */
-	@Override
-	@Overwrite
-	public void applyDamage(DamageSource source, float f) {
-		throw new IllegalStateException("Half you absolute moron u called the wrong method");
-	}
-
-	private int duration;
+	@Shadow
+	public abstract String getEntityName();
 
 	@Redirect (method = "attack", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isOnFire()Z"))
 	private boolean fukkit_hijackIf(Entity entity) {
 		if (!entity.isOnFire()) {
-			EntityCombustByEntityEvent event = new EntityCombustByEntityEvent((org.bukkit.entity.Entity) this.fukkit$getBukkit(), ((EntityAccess<?>) entity).getBukkit(), 1);
+			EntityCombustByEntityEvent event = new EntityCombustByEntityEvent((org.bukkit.entity.Entity) this
+			                                                                                             .fukkit$getBukkit(), ((EntityAccess<?>) entity)
+			                                                                                                                  .getBukkit(), 1);
 			Bukkit.getPluginManager().callEvent(event);
 			this.duration = event.getDuration();
 			return event.isCancelled(); // continue if
@@ -256,34 +250,44 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 		return true;
 	}
 
-	@Redirect (method = "attack", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setOnFireFor(I)V", ordinal = 0))
+	@Redirect (method = "attack",
+	           at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setOnFireFor(I)V", ordinal = 0))
 	private void fukkit_eventDuration(Entity entity, int seconds) {
 		((EntityAccess<?>) entity).setOnFireFor(this.duration, false);
 	}
 
 	// not vanilla?
-	@Redirect (method = "attack", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;damage(Lnet/minecraft/entity/damage/DamageSource;F)Z"))
+	@Redirect (method = "attack", at = @At (value = "INVOKE",
+	                                        target = "Lnet/minecraft/entity/LivingEntity;damage" +
+	                                                 "(Lnet/minecraft/entity/damage/DamageSource;F)Z"))
 	private boolean fukkit_onlyApply(LivingEntity entity, DamageSource source, float amount) {
 		if (entity.damage(((DamageSourceAccess) source).sweep(), amount)) {
-			entity.takeKnockback((LivingEntity) (Object) this, 0.4F, MathHelper.sin(this.yaw * 0.017453292F), -MathHelper.cos(this.yaw * 0.017453292F));
+			entity
+			.takeKnockback((LivingEntity) (Object) this, 0.4F, MathHelper.sin(this.yaw * 0.017453292F), -MathHelper
+			                                                                                             .cos(this.yaw * 0.017453292F));
 		}
 		return false;
 	}
 
-	@Redirect (method = "attack", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;takeKnockback(Lnet/minecraft/entity/Entity;FDD)V", ordinal = 1))
-	private void fukkit_replaced(LivingEntity entity, Entity attacker, float speed, double xMovement, double zMovement) {
+	@Redirect (method = "attack", at = @At (value = "INVOKE",
+	                                        target = "Lnet/minecraft/entity/LivingEntity;takeKnockback" +
+	                                                 "(Lnet/minecraft/entity/Entity;FDD)V",
+	                                        ordinal = 1))
+	private void fukkit_replaced(LivingEntity entity, Entity attacker, float speed, double xMovement,
+	                             double zMovement) {
 
 	}
 
-	// assert main thread
-	private Vec3d vec3d;
-
-	@Inject (method = "attack", at = @At (value = "OPCODE", opcode = Opcodes.INSTANCEOF, args = "desc=net/minecraft/server/network/ServerPlayerEntity"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_playerVeloEvent(Entity target, CallbackInfo ci, float f, float h, boolean bl, boolean bl2, int j, boolean bl3, boolean bl4, float k, boolean bl5, int l, Vec3d vec3d) {
+	@Inject (method = "attack", at = @At (value = "OPCODE", opcode = Opcodes.INSTANCEOF,
+	                                      args = "desc=net/minecraft/server/network/ServerPlayerEntity"),
+	         locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_playerVeloEvent(Entity target, CallbackInfo ci, float f, float h, boolean bl, boolean bl2,
+	                                    int j, boolean bl3, boolean bl4, float k, boolean bl5, int l, Vec3d vec3d) {
 		this.vec3d = vec3d;
 	}
 
-	@Redirect (method = "attack", at = @At (value = "FIELD", opcode = Opcodes.GETFIELD, target = "Lnet/minecraft/entity/Entity;velocityModified:Z", ordinal = 0))
+	@Redirect (method = "attack", at = @At (value = "FIELD", opcode = Opcodes.GETFIELD,
+	                                        target = "Lnet/minecraft/entity/Entity;velocityModified:Z", ordinal = 0))
 	private boolean fukkit_modified(Entity entity) {
 		// check main thread
 		if (entity.velocityModified) {
@@ -301,24 +305,28 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 		return false; // exit if
 	}
 
-	@Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setOnFireFor(I)V", ordinal = 1))
+	@Redirect (method = "attack",
+	           at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setOnFireFor(I)V", ordinal = 1))
 	private void fukkit_entityCombustEvent(Entity entity, int seconds) {
-		EntityCombustByEntityEvent event = new EntityCombustByEntityEvent((org.bukkit.entity.Entity) this.fukkit$getBukkit(), ((EntityAccess<?>)entity).getBukkit(), seconds);
+		EntityCombustByEntityEvent event = new EntityCombustByEntityEvent((org.bukkit.entity.Entity) this
+		                                                                                             .fukkit$getBukkit(), ((EntityAccess<?>) entity)
+		                                                                                                                  .getBukkit(), seconds);
 		Bukkit.getPluginManager().callEvent(event);
-		if(!event.isCancelled()) {
+		if (!event.isCancelled()) {
 			((EntityAccess<?>) entity).setOnFireFor(event.getDuration(), false);
 		}
 	}
 
-	@Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;extinguish()V"))
+	@Inject (method = "attack", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/Entity;extinguish()V"))
 	private void fukkit_resync(Entity target, CallbackInfo ci) {
-		if((Object)this instanceof ServerPlayerEntity) {
-			((ServerPlayerEntityAccess)this).getBukkit().updateInventory();
+		if ((Object) this instanceof ServerPlayerEntity) {
+			((ServerPlayerEntityAccess) this).getBukkit().updateInventory();
 		}
 	}
 
 	/**
 	 * todo replace with injects
+	 *
 	 * @author HalfOf2
 	 * @reason method signature change
 	 */
@@ -329,14 +337,17 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 
 	// accessor needed?
 	@Unique
-	private Either<PlayerEntity.SleepFailureReason, Unit> getBedResult(BlockPos blockposition, Direction enumdirection) {
+	private Either<PlayerEntity.SleepFailureReason, Unit> getBedResult(BlockPos blockposition,
+	                                                                   Direction enumdirection) {
 		if (!this.world.isClient) {
 			if (this.isSleeping() || !this.isAlive()) {
 				return Either.left(PlayerEntity.SleepFailureReason.OTHER_PROBLEM);
 			}
 
 			// CraftBukkit - moved world and biome check from BlockBed interact handling here
-			if (!this.world.dimension.canPlayersSleep() || this.world.getBiome(blockposition) == Biomes.NETHER || !this.world.dimension.hasVisibleSky()) {
+			if (!this.world.dimension.canPlayersSleep() || this.world
+			                                               .getBiome(blockposition) == Biomes.NETHER || !this.world.dimension
+			                                                                                             .hasVisibleSky()) {
 				return Either.left(PlayerEntity.SleepFailureReason.NOT_POSSIBLE_HERE);
 			}
 
@@ -354,7 +365,15 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 			}
 
 			if (!this.isCreative()) {
-				List<HostileEntity> list = this.world.getEntities(HostileEntity.class, new Box((double) blockposition.getX() - 8.0D, (double) blockposition.getY() - 5.0D, (double) blockposition.getZ() - 8.0D, (double) blockposition.getX() + 8.0D, (double) blockposition.getY() + 5.0D, (double) blockposition.getZ() + 8.0D), (hostile) -> hostile.isAngryAt((PlayerEntity) (Object) this));
+				List<HostileEntity> list = this.world.getEntities(HostileEntity.class, new Box((double) blockposition
+				                                                                                        .getX() - 8.0D
+				, (double) blockposition
+				                                                                                                                 .getY() - 5.0D, (double) blockposition
+				                                                                                                                                          .getZ() - 8.0D, (double) blockposition
+				                                                                                                                                                                   .getX() + 8.0D, (double) blockposition
+				                                                                                                                                                                                            .getY() + 5.0D, (double) blockposition
+				                                                                                                                                                                                                                     .getZ() + 8.0D), (hostile) -> hostile
+				                                                                                                                                                                                                                                                   .isAngryAt((PlayerEntity) (Object) this));
 				if (!list.isEmpty()) {
 					return Either.left(PlayerEntity.SleepFailureReason.NOT_SAFE);
 				}
@@ -363,102 +382,91 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 		return Either.right(Unit.INSTANCE);
 	}
 
-	public Either<PlayerEntity.SleepFailureReason, Unit> fukkit$sleep(BlockPos blockposition, boolean force) {
-		Direction direction = this.world.getBlockState(blockposition).get(HorizontalFacingBlock.FACING);
-		Either<PlayerEntity.SleepFailureReason, Unit> bedResult = this.getBedResult(blockposition, direction);
+	@Override
+	@Shadow public abstract void sleep(BlockPos pos);
 
-		if (bedResult.left().orElse(null) == PlayerEntity.SleepFailureReason.OTHER_PROBLEM) {
-			return bedResult; // return immediately if the result is not bypassable by plugins
-		}
+	@Shadow public abstract void setPlayerSpawn(BlockPos blockPos, boolean bl, boolean bl2);
 
-		if (force) {
-			bedResult = Either.right(Unit.INSTANCE);
-		}
+	@Shadow protected abstract boolean isWithinSleepingRange(BlockPos sleepPos, Direction direction);
 
-		if (this.fukkit$getBukkit() instanceof Player) {
-			bedResult = org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerBedEnterEvent((PlayerEntity) (Object) this, blockposition, bedResult);
+	@Shadow protected abstract boolean isBedObstructed(BlockPos pos, Direction direction);
 
-			if (bedResult.left().isPresent()) {
-				return bedResult;
-			}
-		}
-		// CraftBukkit end
+	@Shadow public abstract boolean isCreative();
 
-		this.sleep(blockposition);
-		this.sleepTimer = 0;
-		if (this.world instanceof ServerWorld) {
-			((ServerWorld) this.world).updatePlayersSleeping();
-		}
-
-		return Either.right(Unit.INSTANCE);
+	/**
+	 * todo replace with injects after you verify you've called the correct method everwhere
+	 *
+	 * @author HalfOf2
+	 * @reason method signature change
+	 */
+	@Override
+	@Overwrite
+	public void applyDamage(DamageSource source, float f) {
+		throw new IllegalStateException("Half you absolute moron u called the wrong method");
 	}
 
-	// replace with assert main, and verify recursion
-	private BlockPos bedPos;
-	@Inject(method = "wakeUp(ZZ)V", at = @At("HEAD"))
+	@Inject (method = "wakeUp(ZZ)V", at = @At ("HEAD"))
 	private void fukkit_bedPos(boolean bl, boolean bl2, CallbackInfo ci) {
 		this.bedPos = this.getSleepingPosition().orElse(null);
 	}
 
-	@Inject(method = "wakeUp(ZZ)V", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;sleepTimer:I"))
+	@Inject (method = "wakeUp(ZZ)V",
+	         at = @At (value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;sleepTimer:I"))
 	private void fukkit_playerLeaveBedEvent(boolean bl, boolean bl2, CallbackInfo ci) {
-		if(this.fukkit$getBukkit() instanceof Player) {
+		if (this.fukkit$getBukkit() instanceof Player) {
 			Player player = (Player) this.fukkit$getBukkit();
 			Block bed;
-			World bukkit = ((WorldAccess)this.world).getBukkit();
-			if(this.bedPos != null) {
+			World bukkit = ((WorldAccess) this.world).getBukkit();
+			if (this.bedPos != null) {
 				bed = bukkit.getBlockAt(this.bedPos.getX(), this.bedPos.getY(), this.bedPos.getZ());
 			} else {
 				bed = bukkit.getBlockAt(player.getLocation());
 			}
 
 			PlayerBedLeaveEvent event = new PlayerBedLeaveEvent(player, bed, true);
-			((WorldAccess)this.world).getBukkitServer().getPluginManager().callEvent(event);
+			((WorldAccess) this.world).getBukkitServer().getPluginManager().callEvent(event);
 		}
 		this.bedPos = null; // reset
 	}
 
-	@Inject(method = "setPlayerSpawn", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;spawnForced:Z", ordinal = 0))
+	@Inject (method = "setPlayerSpawn",
+	         at = @At (value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;spawnForced:Z",
+	                   ordinal = 0))
 	private void fukkit_spawnWorld(BlockPos blockPos, boolean bl, boolean bl2, CallbackInfo ci) {
 		this.spawnWorld = this.world.getLevelProperties().getLevelName();
 	}
 
-	@Inject(method = "setPlayerSpawn", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;spawnForced:Z", ordinal = 1))
+	@Inject (method = "setPlayerSpawn",
+	         at = @At (value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;spawnForced:Z",
+	                   ordinal = 1))
 	private void fukkit_spawnWorld0(BlockPos blockPos, boolean bl, boolean bl2, CallbackInfo ci) {
 		this.spawnWorld = "";
 	}
 
-	@Redirect(method = "method_23669", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setFlag(IZ)V"))
+	@Redirect (method = "method_23669",
+	           at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setFlag(IZ)V"))
 	private void fukkit_toggleGlideEvent(PlayerEntity entity, int index, boolean value) {
-		if(CraftEventFactory.callToggleGlideEvent(entity, true).isCancelled())
-			this.setFlag(7, true);
-		else {
+		if (CraftEventFactory.callToggleGlideEvent(entity, true).isCancelled()) { this.setFlag(7, true); } else {
 			this.setFlag(7, true);
 			this.setFlag(7, false);
 		}
 	}
 
-	@Inject(method = "method_23670", at = @At("HEAD"))
+	@Inject (method = "method_23670", at = @At ("HEAD"))
 	private void fukkit_toggleGlideEvent(CallbackInfo ci) {
-		if(CraftEventFactory.callToggleGlideEvent((PlayerEntity) (Object) this, false).isCancelled())
-			ci.cancel();
+		if (CraftEventFactory.callToggleGlideEvent((PlayerEntity) (Object) this, false).isCancelled()) { ci.cancel(); }
 	}
 
 	// two birds 1 stone
-	@Redirect(method = "dropShoulderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;method_7296(Lnet/minecraft/nbt/CompoundTag;)V"))
+	@Redirect (method = "dropShoulderEntities", at = @At (value = "INVOKE",
+	                                                      target = "Lnet/minecraft/entity/player/PlayerEntity;method_7296(Lnet/minecraft/nbt/CompoundTag;)V"))
 	private void fukkit_voidCalls(PlayerEntity entity, CompoundTag compoundTag) {}
 
-	@Redirect(method = "dropShoulderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setShoulderEntityLeft(Lnet/minecraft/nbt/CompoundTag;)V"))
+	@Redirect (method = "dropShoulderEntities", at = @At (value = "INVOKE",
+	                                                      target = "Lnet/minecraft/entity/player/PlayerEntity;setShoulderEntityLeft(Lnet/minecraft/nbt/CompoundTag;)V"))
 	private void fukkit_setLeft(PlayerEntity entity, CompoundTag entityTag) {
-		if(this.spawnEntityFromShoulder(this.getShoulderEntityLeft())) {
+		if (this.spawnEntityFromShoulder(this.getShoulderEntityLeft())) {
 			this.setShoulderEntityLeft(entityTag);
-		}
-	}
-
-	@Redirect(method = "dropShoulderEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setShoulderEntityRight(Lnet/minecraft/nbt/CompoundTag;)V"))
-	private void fukkit_setRight(PlayerEntity entity, CompoundTag entityTag) {
-		if(this.spawnEntityFromShoulder(this.getShoulderEntityRight())) {
-			this.setShoulderEntityRight(entityTag);
 		}
 	}
 
@@ -471,12 +479,30 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 				}
 
 				entity.updatePosition(this.getX(), this.getY() + 0.699999988079071D, this.getZ());
-				return ((ServerWorldAccess) this.world).addEntitySerialized(entity, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY); // CraftBukkit
+				return ((ServerWorldAccess) this.world)
+				       .addEntitySerialized(entity, CreatureSpawnEvent.SpawnReason.SHOULDER_ENTITY); // CraftBukkit
 			}).orElse(true); // CraftBukkit
 		}
 
 		return true; // CraftBukkit
 	}
+
+	@Shadow public abstract CompoundTag getShoulderEntityLeft();
+
+	@Shadow protected abstract void setShoulderEntityLeft(CompoundTag entityTag);
+
+	@Redirect (method = "dropShoulderEntities", at = @At (value = "INVOKE",
+	                                                      target = "Lnet/minecraft/entity/player/PlayerEntity;setShoulderEntityRight(Lnet/minecraft/nbt/CompoundTag;)V"))
+	private void fukkit_setRight(PlayerEntity entity, CompoundTag entityTag) {
+		if (this.spawnEntityFromShoulder(this.getShoulderEntityRight())) {
+			this.setShoulderEntityRight(entityTag);
+		}
+	}
+
+	@Shadow public abstract CompoundTag getShoulderEntityRight();
+
+	@Shadow protected abstract void setShoulderEntityRight(CompoundTag entityTag);
+
 	public boolean fukkit$isFauxSleeping() {
 		return this.fauxSleeping;
 	}
@@ -499,5 +525,36 @@ public abstract class PlayerEntityMixin extends LivingEntityMixin {
 
 	public void fukkit$setOldLevel(int level) {
 		this.oldLevel = level;
+	}
+
+	public Either<PlayerEntity.SleepFailureReason, Unit> fukkit$sleep(BlockPos blockposition, boolean force) {
+		Direction direction = this.world.getBlockState(blockposition).get(HorizontalFacingBlock.FACING);
+		Either<PlayerEntity.SleepFailureReason, Unit> bedResult = this.getBedResult(blockposition, direction);
+
+		if (bedResult.left().orElse(null) == PlayerEntity.SleepFailureReason.OTHER_PROBLEM) {
+			return bedResult; // return immediately if the result is not bypassable by plugins
+		}
+
+		if (force) {
+			bedResult = Either.right(Unit.INSTANCE);
+		}
+
+		if (this.fukkit$getBukkit() instanceof Player) {
+			bedResult = org.bukkit.craftbukkit.event.CraftEventFactory
+			            .callPlayerBedEnterEvent((PlayerEntity) (Object) this, blockposition, bedResult);
+
+			if (bedResult.left().isPresent()) {
+				return bedResult;
+			}
+		}
+		// CraftBukkit end
+
+		this.sleep(blockposition);
+		this.sleepTimer = 0;
+		if (this.world instanceof ServerWorld) {
+			((ServerWorld) this.world).updatePlayersSleeping();
+		}
+
+		return Either.right(Unit.INSTANCE);
 	}
 }

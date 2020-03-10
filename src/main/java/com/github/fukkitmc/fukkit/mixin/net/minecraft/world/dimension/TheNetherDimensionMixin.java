@@ -16,22 +16,24 @@ public abstract class TheNetherDimensionMixin extends Dimension {
 	}
 
 	/**
-	 * handled by super
-	 * @author HalfOf2
-	 */
-	@Override
-	@Overwrite
-	public DimensionType getType() {
-		return ((DimensionAccess)this).getType();
-	}
-
-	/**
 	 * Bukkit said this is needed, and so it must be done
+	 *
 	 * @author HalfOf2
 	 */
 	@Override
 	@Overwrite
 	public WorldBorder createWorldBorder() {
 		return new WorldBorder();
+	}
+
+	/**
+	 * handled by super
+	 *
+	 * @author HalfOf2
+	 */
+	@Override
+	@Overwrite
+	public DimensionType getType() {
+		return ((DimensionAccess) this).getType();
 	}
 }

@@ -18,8 +18,10 @@ import java.util.List;
 
 @Mixin (TripwireBlock.class)
 public class TripwireBlockMixin {
-	@Inject (method = "updatePowered", at = @At (value = "JUMP", ordinal = 1, shift = At.Shift.AFTER), locals = LocalCapture.PRINT, cancellable = true)
-	private void fukkit_interactEvent(World world, BlockPos pos, CallbackInfo ci, BlockState state, boolean powered, boolean shouldPower, List<? extends Entity> list) {
+	@Inject (method = "updatePowered", at = @At (value = "JUMP", ordinal = 1, shift = At.Shift.AFTER),
+	         locals = LocalCapture.PRINT, cancellable = true)
+	private void fukkit_interactEvent(World world, BlockPos pos, CallbackInfo ci, BlockState state, boolean powered,
+	                                  boolean shouldPower, List<? extends Entity> list) {
 		if (shouldPower) { // powered != shouldPower is handled above
 			org.bukkit.World bworld = ((WorldAccess) world).getBukkit();
 			org.bukkit.plugin.PluginManager manager = ((WorldAccess) world).getBukkitServer().getPluginManager();
@@ -32,7 +34,9 @@ public class TripwireBlockMixin {
 					org.bukkit.event.Cancellable cancellable;
 
 					if (object instanceof PlayerEntity) {
-						cancellable = org.bukkit.craftbukkit.event.CraftEventFactory.callPlayerInteractEvent((PlayerEntity) object, org.bukkit.event.block.Action.PHYSICAL, pos, null, null, null);
+						cancellable = org.bukkit.craftbukkit.event.CraftEventFactory
+						              .callPlayerInteractEvent((PlayerEntity) object,
+						              org.bukkit.event.block.Action.PHYSICAL, pos, null, null, null);
 					} else if (object instanceof Entity) {
 						cancellable = new EntityInteractEvent(((EntityAccess<?>) object).getBukkit(), block);
 						manager.callEvent((EntityInteractEvent) cancellable);

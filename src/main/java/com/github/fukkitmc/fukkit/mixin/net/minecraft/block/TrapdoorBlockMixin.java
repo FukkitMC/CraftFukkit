@@ -14,9 +14,17 @@ import org.spongepowered.asm.mixin.injection.Slice;
 
 @Mixin (TrapdoorBlock.class)
 public class TrapdoorBlockMixin {
-	@ModifyVariable (method = "neighborUpdate", at = @At (value = "INVOKE", target = "Lnet/minecraft/block/BlockState;get(Lnet/minecraft/state/property/Property;)Ljava/lang/Comparable;", ordinal = 0), index = 7, ordinal = 1, slice = @Slice (from = @At (value = "FIELD", target = "Lnet/minecraft/block/TrapdoorBlock;OPEN:Lnet/minecraft/state/property/BooleanProperty;", ordinal = 0)))
-	private boolean fukkit_modVar(boolean var, BlockState state, World world, BlockPos pos, Block block, BlockPos neighborPos, boolean moved) {
-		org.bukkit.World bworld = ((WorldAccess)world).getBukkit();
+	@ModifyVariable (method = "neighborUpdate", at = @At (value = "INVOKE",
+	                                                      target = "Lnet/minecraft/block/BlockState;get" +
+	                                                               "(Lnet/minecraft/state/property/Property;)" +
+	                                                               "Ljava/lang/Comparable;",
+	                                                      ordinal = 0), index = 7, ordinal = 1, slice = @Slice (
+	from = @At (value = "FIELD",
+	            target = "Lnet/minecraft/block/TrapdoorBlock;OPEN:Lnet/minecraft/state/property/BooleanProperty;",
+	            ordinal = 0)))
+	private boolean fukkit_modVar(boolean var, BlockState state, World world, BlockPos pos, Block block,
+	                              BlockPos neighborPos, boolean moved) {
+		org.bukkit.World bworld = ((WorldAccess) world).getBukkit();
 		org.bukkit.block.Block bblock = bworld.getBlockAt(pos.getX(), pos.getY(), pos.getZ());
 
 		int power = bblock.getBlockPower();
@@ -24,7 +32,7 @@ public class TrapdoorBlockMixin {
 
 		if (oldPower == 0 ^ power == 0 || block.getDefaultState().emitsRedstonePower()) {
 			BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(bblock, oldPower, power);
-			((WorldAccess)world).getBukkitServer().getPluginManager().callEvent(eventRedstone);
+			((WorldAccess) world).getBukkitServer().getPluginManager().callEvent(eventRedstone);
 			return eventRedstone.getNewCurrent() > 0;
 		}
 		return var;

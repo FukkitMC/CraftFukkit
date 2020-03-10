@@ -12,12 +12,13 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Random;
 
-@Mixin(CoralBlockBlock.class)
+@Mixin (CoralBlockBlock.class)
 public class CoralBlockBlockMixin {
 	@Shadow @Final private Block deadCoralBlock;
 
 	private void fukkit_fadeEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci) {
-		if(CraftEventFactory.callBlockFadeEvent(world, pos, this.deadCoralBlock.getDefaultState()).isCancelled())
+		if (CraftEventFactory.callBlockFadeEvent(world, pos, this.deadCoralBlock.getDefaultState()).isCancelled()) {
 			ci.cancel();
+		}
 	}
 }

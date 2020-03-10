@@ -20,16 +20,31 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin (EndPortalBlock.class)
 public class EndPortalBlockMixin {
-	@Inject (method = "onEntityCollision", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/Entity;changeDimension(Lnet/minecraft/world/dimension/DimensionType;)Lnet/minecraft/entity/Entity;"))
-	private void fukkit_entityPortalEvent(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo ci) {
-		EntityPortalEnterEvent event = new EntityPortalEnterEvent(((EntityAccess<?>)entity).getBukkit(), new org.bukkit.Location(((WorldAccess)world).getBukkit(), pos.getX(), pos.getY(), pos.getZ()));
-		((WorldAccess)world).getBukkitServer().getPluginManager().callEvent(event);
+	@Inject (method = "onEntityCollision", at = @At (value = "INVOKE",
+	                                                 target = "Lnet/minecraft/entity/Entity;changeDimension" +
+	                                                          "(Lnet/minecraft/world/dimension/DimensionType;)" +
+	                                                          "Lnet/minecraft/entity/Entity;"))
+	private void fukkit_entityPortalEvent(BlockState state, World world, BlockPos pos, Entity entity,
+	                                      CallbackInfo ci) {
+		EntityPortalEnterEvent event = new EntityPortalEnterEvent(((EntityAccess<?>) entity)
+		                                                          .getBukkit(),
+		new org.bukkit.Location(((WorldAccess) world)
+		                                                                                                .getBukkit(),
+		pos
+		                                                                                                              .getX(), pos
+		                                                                                                                       .getY(), pos
+		                                                                                                                                .getZ()));
+		((WorldAccess) world).getBukkitServer().getPluginManager().callEvent(event);
 
 		if (entity instanceof ServerPlayerEntity) {
-			((ServerPlayerEntityAccess) entity).changeDimension(((DimensionTypeAccess)world.dimension.getType()).getType() == DimensionType.THE_END ? DimensionType.OVERWORLD : DimensionType.THE_END, PlayerTeleportEvent.TeleportCause.END_PORTAL);
+			((ServerPlayerEntityAccess) entity).changeDimension(
+			((DimensionTypeAccess) world.dimension.getType()).getType() == DimensionType.THE_END ?
+			DimensionType.OVERWORLD : DimensionType.THE_END, PlayerTeleportEvent.TeleportCause.END_PORTAL);
 			ci.cancel();
 			return;
 		}
-		entity.changeDimension(((DimensionTypeAccess)world.dimension.getType()).getType() == DimensionType.THE_END ? DimensionType.OVERWORLD : DimensionType.THE_END);
+		entity.changeDimension(
+		((DimensionTypeAccess) world.dimension.getType()).getType() == DimensionType.THE_END ? DimensionType.OVERWORLD :
+		DimensionType.THE_END);
 	}
 }

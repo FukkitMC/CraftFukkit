@@ -12,14 +12,13 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.*;
 import java.util.Random;
 
-@Implements(@Interface(iface = BlockAccess.class, prefix = "fukkit$"))
-@Mixin(OreBlock.class)
+@Implements (@Interface (iface = BlockAccess.class, prefix = "fukkit$"))
+@Mixin (OreBlock.class)
 public abstract class OreBlockMixin extends Block {
 	public OreBlockMixin(Settings settings) {
 		super(settings);
 	}
 
-	@Shadow protected abstract int getExperienceWhenMined(Random random);
 	/**
 	 * @author HalfOf2
 	 * @reason delegated to get exp drop
@@ -41,4 +40,6 @@ public abstract class OreBlockMixin extends Block {
 
 		return 0;
 	}
+
+	@Shadow protected abstract int getExperienceWhenMined(Random random);
 }

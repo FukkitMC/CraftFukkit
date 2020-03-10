@@ -12,10 +12,12 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import java.util.function.BiFunction;
 
-@Mixin(SecondaryServerWorld.class)
+@Mixin (SecondaryServerWorld.class)
 public abstract class SecondaryServerWorldMixin extends World {
 
-	protected SecondaryServerWorldMixin(LevelProperties levelProperties, DimensionType dimensionType, BiFunction<World, Dimension, ChunkManager> chunkManagerProvider, Profiler profiler, boolean isClient) {
+	protected SecondaryServerWorldMixin(LevelProperties levelProperties, DimensionType dimensionType, BiFunction<World
+	                                                                                                            ,
+	                                                                                                            Dimension, ChunkManager> chunkManagerProvider, Profiler profiler, boolean isClient) {
 		super(levelProperties, dimensionType, chunkManagerProvider, profiler, isClient);
 	}
 

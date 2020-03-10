@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 @InjectionPoint.AtCode ("OPCODE")
 public class GenericOpcode extends InjectionPoint {

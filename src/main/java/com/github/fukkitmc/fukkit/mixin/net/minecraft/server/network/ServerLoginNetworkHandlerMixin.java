@@ -22,12 +22,9 @@ import java.net.SocketAddress;
 public abstract class ServerLoginNetworkHandlerMixin {
 	// unsafe but probably safe
 	private static final ThreadLocal<ServerPlayerEntity> SERVER_PLAYER_ENTITY = new ThreadLocal<>();
-	public String hostName;
-
+	private static final Text DUMMY_TEXT = new LiteralText("Something went wrong!");
 	@Shadow @Final private static Logger LOGGER;
-
-	@Shadow public abstract String getConnectionInfo();
-
+	public String hostName;
 	@Shadow @Final public ClientConnection connection;
 
 	@Shadow @Final private MinecraftServer server;
@@ -45,29 +42,38 @@ public abstract class ServerLoginNetworkHandlerMixin {
 		}
 	}
 
-	private static final Text DUMMY_TEXT = new LiteralText("Something went wrong!");
+	@Shadow public abstract String getConnectionInfo();
 
-	@Redirect(method = "acceptPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;checkCanJoin(Ljava/net/SocketAddress;Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/text/Text;"))
+	public MinecraftServer fukkit$getServer() {
+		return this.server;
+	}
+
+	@Redirect (method = "acceptPlayer", at = @At (value = "INVOKE",
+	                                              target = "Lnet/minecraft/server/PlayerManager;checkCanJoin" +
+	                                                       "(Ljava/net/SocketAddress;Lcom/mojang/authlib/GameProfile;)" +
+	                                                       "Lnet/minecraft/text/Text;"))
 	private Text fukkit_newIf(PlayerManager manager, SocketAddress socketAddress, GameProfile gameProfile) {
-		ServerPlayerEntity entity = ((PlayerManagerAccess)this.server.getPlayerManager()).attemptLogin((ServerLoginNetworkHandler) (Object) this, this.profile, hostName);
+		ServerPlayerEntity entity = ((PlayerManagerAccess) this.server.getPlayerManager())
+		                            .attemptLogin((ServerLoginNetworkHandler) (Object) this, this.profile, this.hostName);
 		SERVER_PLAYER_ENTITY.set(entity);
 		// mega brain if statement time
 		return entity == null ? DUMMY_TEXT : null;
 	}
 
-	@Redirect(method = "acceptPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerLoginNetworkHandler;disconnect(Lnet/minecraft/text/Text;)V"))
+	@Redirect (method = "acceptPlayer", at = @At (value = "INVOKE",
+	                                              target = "Lnet/minecraft/server/network/ServerLoginNetworkHandler;" +
+	                                                       "disconnect(Lnet/minecraft/text/Text;)V"))
 	private void fukkit_voidCall(ServerLoginNetworkHandler networkHandler, Text reason) {}
 
 	// two birds one stone
-	@Redirect(method = "acceptPlayer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;createPlayer(Lcom/mojang/authlib/GameProfile;)Lnet/minecraft/server/network/ServerPlayerEntity;"))
+	@Redirect (method = "acceptPlayer", at = @At (value = "INVOKE",
+	                                              target = "Lnet/minecraft/server/PlayerManager;createPlayer" +
+	                                                       "(Lcom/mojang/authlib/GameProfile;)" +
+	                                                       "Lnet/minecraft/server/network/ServerPlayerEntity;"))
 	private ServerPlayerEntity fukkit_proccessLogin(PlayerManager manager, GameProfile profile) {
 		ServerPlayerEntity entity = SERVER_PLAYER_ENTITY.get();
 		SERVER_PLAYER_ENTITY.remove();
-		return ((PlayerManagerAccess)manager).processLogin(profile, entity);
-	}
-
-	public MinecraftServer fukkit$getServer() {
-		return this.server;
+		return ((PlayerManagerAccess) manager).processLogin(profile, entity);
 	}
 
 }

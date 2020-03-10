@@ -22,7 +22,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import static net.minecraft.block.Block.dropStack;
 import static net.minecraft.block.Block.dropStacks;
 
 @Mixin (SpongeBlock.class)
@@ -34,33 +33,53 @@ public class SpongeBlockMixin {
 		this.stateLists.add(new BlockStateListPopulator(world));
 	}
 
-	@Redirect (method = "absorbWater", at = @At (value = "INVOKE", target = "Lnet/minecraft/world/World;getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/BlockState;"))
+	@Redirect (method = "absorbWater", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/world/World;getBlockState" +
+	                                                      "(Lnet/minecraft/util/math/BlockPos;)" +
+	                                                      "Lnet/minecraft/block/BlockState;"))
 	private BlockState fukkit_getState(World world, BlockPos pos) {
 		return this.stateLists.peek().getBlockState(pos);
 	}
 
-	@Redirect (method = "absorbWater", at = @At (value = "INVOKE", target = "Lnet/minecraft/world/World;getFluidState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/fluid/FluidState;"))
+	@Redirect (method = "absorbWater", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/world/World;getFluidState" +
+	                                                      "(Lnet/minecraft/util/math/BlockPos;)" +
+	                                                      "Lnet/minecraft/fluid/FluidState;"))
 	private FluidState fukkit_getFluidState(World world, BlockPos pos) {
 		return this.stateLists.peek().getFluidState(pos);
 	}
 
-	@Redirect (method = "absorbWater", at = @At (value = "INVOKE", target = "Lnet/minecraft/block/FluidDrainable;tryDrainFluid(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Lnet/minecraft/fluid/Fluid;"))
+	@Redirect (method = "absorbWater", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/block/FluidDrainable;tryDrainFluid" +
+	                                                      "(Lnet/minecraft/world/IWorld;" +
+	                                                      "Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/block/BlockState;)" +
+	                                                      "Lnet/minecraft/fluid/Fluid;"))
 	private Fluid fukkit_drainList(FluidDrainable drainable, IWorld world, BlockPos pos, BlockState state) {
 		return drainable.tryDrainFluid(this.stateLists.peek(), pos, state);
 	}
 
 	// two birds 1 stone
-	@Redirect (method = "absorbWater", at = @At (value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+	@Redirect (method = "absorbWater", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/world/World;setBlockState" +
+	                                                      "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/block/BlockState;I)Z"))
 	private boolean fukkit_blockList(World world, BlockPos pos, BlockState state, int flags) {
 		return this.stateLists.peek().setBlockState(pos, state, flags);
 	}
 
-	@Redirect (method = "absorbWater", at = @At (value = "INVOKE", target = "Lnet/minecraft/block/Block;hasBlockEntity()Z"))
+	@Redirect (method = "absorbWater",
+	           at = @At (value = "INVOKE", target = "Lnet/minecraft/block/Block;hasBlockEntity()Z"))
 	private boolean fukkit_false(Block block) {
 		return false;
 	}
 
-	@Redirect (method = "absorbWater", at = @At (value = "INVOKE", target = "Lnet/minecraft/block/SpongeBlock;dropStacks(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/entity/BlockEntity;)V"))
+	@Redirect (method = "absorbWater", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/block/SpongeBlock;dropStacks" +
+	                                                      "(Lnet/minecraft/block/BlockState;" +
+	                                                      "Lnet/minecraft/world/World;" +
+	                                                      "Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/block/entity/BlockEntity;)V"))
 	private void fukkit_doNothing(BlockState state, World world, BlockPos pos, BlockEntity blockEntity) {
 
 	}
@@ -69,10 +88,11 @@ public class SpongeBlockMixin {
 	private void fukkit_spongeAbsorbEvent(World world, BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
 		List<CraftBlockState> blocks = this.stateLists.peek().getList(); // Is a clone
 		if (!blocks.isEmpty()) {
-			final org.bukkit.block.Block bblock = ((WorldAccess)world).getBukkit().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+			final org.bukkit.block.Block bblock = ((WorldAccess) world).getBukkit()
+			                                                           .getBlockAt(pos.getX(), pos.getY(), pos.getZ());
 
 			SpongeAbsorbEvent event = new SpongeAbsorbEvent(bblock, (List<org.bukkit.block.BlockState>) (List) blocks);
-			((WorldAccess)world).getBukkitServer().getPluginManager().callEvent(event);
+			((WorldAccess) world).getBukkitServer().getPluginManager().callEvent(event);
 
 			if (event.isCancelled()) {
 				cir.setReturnValue(false);
@@ -85,8 +105,14 @@ public class SpongeBlockMixin {
 				FluidState fluid = world.getFluidState(blockposition2);
 				Material material = iblockdata.getMaterial();
 
-				if (fluid.matches(FluidTags.WATER) && (!(iblockdata.getBlock() instanceof FluidDrainable) || ((FluidDrainable) iblockdata.getBlock()).tryDrainFluid(this.stateLists.peek(), blockposition2, iblockdata) == Fluids.EMPTY) && !(iblockdata.getBlock() instanceof FluidBlock) && (material == Material.UNDERWATER_PLANT || material == Material.SEAGRASS)) {
-					BlockEntity blockEntity = iblockdata.getBlock().hasBlockEntity() ? world.getBlockEntity(blockposition2) : null;
+				if (fluid.matches(FluidTags.WATER) && (!(iblockdata
+				                                         .getBlock() instanceof FluidDrainable) || ((FluidDrainable) iblockdata
+				                                                                                                     .getBlock())
+				                                                                                   .tryDrainFluid(this.stateLists
+				                                                                                                  .peek(), blockposition2, iblockdata) == Fluids.EMPTY) && !(iblockdata
+				                                                                                                                                                             .getBlock() instanceof FluidBlock) && (material == Material.UNDERWATER_PLANT || material == Material.SEAGRASS)) {
+					BlockEntity blockEntity =
+					iblockdata.getBlock().hasBlockEntity() ? world.getBlockEntity(blockposition2) : null;
 					dropStacks(iblockdata, world, blockposition2, blockEntity);
 				}
 				world.setBlockState(blockposition2, block.getHandle(), block.getFlag());

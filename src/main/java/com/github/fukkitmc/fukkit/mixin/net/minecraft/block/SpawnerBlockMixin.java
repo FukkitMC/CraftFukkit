@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Implements(@Interface(iface = BlockAccess.class, prefix = "fukkit$"))
-@Mixin(SpawnerBlock.class)
+@Implements (@Interface (iface = BlockAccess.class, prefix = "fukkit$"))
+@Mixin (SpawnerBlock.class)
 public class SpawnerBlockMixin extends Block {
 	public SpawnerBlockMixin(Settings settings) {
 		super(settings);

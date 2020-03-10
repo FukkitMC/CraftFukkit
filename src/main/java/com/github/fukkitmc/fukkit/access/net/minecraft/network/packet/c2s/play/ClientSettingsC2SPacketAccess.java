@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 // todo add to mixin package
-@Mixin(ClientSettingsC2SPacket.class)
+@Mixin (ClientSettingsC2SPacket.class)
 public interface ClientSettingsC2SPacketAccess {
-	@Accessor("viewDistance") int getViewDistance();
+	@Accessor ("viewDistance") int getViewDistance();
 }

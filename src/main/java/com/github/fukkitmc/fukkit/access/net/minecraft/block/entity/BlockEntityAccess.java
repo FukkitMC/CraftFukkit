@@ -6,7 +6,10 @@ import org.bukkit.inventory.InventoryHolder;
 
 public interface BlockEntityAccess {
 	InventoryHolder getOwner();
+
 	CraftPersistentDataContainer getContainer();
+
 	void setContainer(CraftPersistentDataContainer container);
+
 	void setWorld(World world);
 }

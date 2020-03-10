@@ -17,7 +17,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.Packet;
-import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.*;
 import net.minecraft.server.dedicated.MinecraftDedicatedServer;
 import net.minecraft.server.network.ServerLoginNetworkHandler;
@@ -69,76 +72,62 @@ public abstract class PlayerManagerMixin {
 	private static final ThreadLocal<String> JOIN_MESSAGES = new ThreadLocal<>();
 	private static final ThreadLocal<ServerPlayerEntity> SERVER_PLAYER_ENTITY = new ThreadLocal<>();
 	private static final ThreadLocal<ServerPlayerEntity> SERVER_PLAYER_ENTITY_2 = new ThreadLocal<>();
-
-	@Mutable
-	@Shadow
-	@Final
-	private List<ServerPlayerEntity> players;
-
-	@Shadow
-	@Final
-	private MinecraftServer server;
 	@Shadow
 	@Final
 	private static Logger LOGGER;
-	@Shadow
-	private PlayerSaveHandler saveHandler;
-
-	@Shadow
-	protected abstract void savePlayerData(ServerPlayerEntity player);
-
-	@Shadow
-	@Final
-	private Map<UUID, ServerPlayerEntity> playerMap;
-
-	@Shadow
-	public abstract BannedPlayerList getUserBanList();
-
-	@Shadow
-	@Final
-	private BannedPlayerList bannedProfiles;
-
-	@Shadow
-	public abstract boolean isWhitelisted(GameProfile gameProfile);
-
-	@Shadow
-	public abstract BannedIpList getIpBanList();
-
 	@Shadow
 	@Final
 	private static SimpleDateFormat DATE_FORMATTER;
 	@Shadow
 	@Final
-	private BannedIpList bannedIps;
+	protected int maxPlayers;
+	@Mutable
 	@Shadow
 	@Final
-	protected int maxPlayers;
-
+	private List<ServerPlayerEntity> players;
 	@Shadow
-	public abstract boolean canBypassPlayerLimit(GameProfile gameProfile);
-
-	@Shadow public abstract void broadcastChatMessage(Text text, boolean system);
-
+	@Final
+	private MinecraftServer server;
+	@Shadow
+	private PlayerSaveHandler saveHandler;
+	@Shadow
+	@Final
+	private Map<UUID, ServerPlayerEntity> playerMap;
+	@Shadow
+	@Final
+	private BannedPlayerList bannedProfiles;
+	@Shadow
+	@Final
+	private BannedIpList bannedIps;
 	private CraftServer craftServer;
 
 	@Inject (method = "<init>", at = @At (value = "TAIL"))
 	public void init(MinecraftServer server, int maxPlayers, CallbackInfo ci) {
 		this.players = new CopyOnWriteArrayList<>();
 		MinecraftServerAccess access = (MinecraftServerAccess) server;
-		access.setBukkit(this.craftServer = new CraftServer((MinecraftDedicatedServer) server, (PlayerManager) (Object) this));
+		access
+		.setBukkit(this.craftServer = new CraftServer((MinecraftDedicatedServer) server,
+		(PlayerManager) (Object) this));
 		access.setConsoleCommandSender(ColouredConsoleSender.getInstance());
 		access.getReader().addCompleter(new ConsoleCommandCompleter(access.getBukkit()));
 	}
 
-	@Inject (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;setWorld(Lnet/minecraft/world/World;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	public void print(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci, GameProfile gameProfile, UserCache userCache, String string, CompoundTag compoundTag, ServerWorld serverWorld) {
+	@Inject (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/network/ServerPlayerEntity;setWorld" +
+	                                                        "(Lnet/minecraft/world/World;)V"),
+	         locals = LocalCapture.CAPTURE_FAILHARD)
+	public void print(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci, GameProfile gameProfile
+	, UserCache userCache, String string, CompoundTag compoundTag, ServerWorld serverWorld) {
 		if (compoundTag != null && compoundTag.contains("bukkit")) {
 			CompoundTag bukkit = compoundTag.getCompound("bukkit");
 			PROFILE_NAMES.set(bukkit.contains("lastKnownName", 8) ? bukkit.getString("lastKnownName") : string);
 		}
 	}
 
-	@ModifyVariable (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;setWorld(Lnet/minecraft/world/World;)V"), index = 6, ordinal = 0)
+	@ModifyVariable (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                                       target = "Lnet/minecraft/server/network/ServerPlayerEntity;" +
+	                                                                "setWorld(Lnet/minecraft/world/World;)V"),
+	                 index = 6, ordinal = 0)
 	private String fukkit_renameDetection(String name) {
 		String val = PROFILE_NAMES.get();
 		if (val != null) {
@@ -148,25 +137,45 @@ public abstract class PlayerManagerMixin {
 		return name;
 	}
 
-	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lorg/apache/logging/log4j/Logger;info(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V"))
-	private void fukkit_moveMessage(Logger logger, String message, Object p0, Object p1, Object p2, Object p3, Object p4, Object p5) {}
+	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                                 target = "Lorg/apache/logging/log4j/Logger;info" +
+	                                                          "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/Object;" +
+	                                                          "Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;" +
+	                                                          "Ljava/lang/Object;)V"))
+	private void fukkit_moveMessage(Logger logger, String message, Object p0, Object p1, Object p2, Object p3,
+	                                Object p4, Object p5) {}
 
-	@ModifyArg (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/GameJoinS2CPacket;<init>(ILnet/minecraft/world/GameMode;JZLnet/minecraft/world/dimension/DimensionType;ILnet/minecraft/world/level/LevelGeneratorType;IZZ)V"), index = 4)
+	@ModifyArg (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                                  target = "Lnet/minecraft/network/packet/s2c/play" +
+	                                                           "/GameJoinS2CPacket;<init>" +
+	                                                           "(ILnet/minecraft/world/GameMode;" +
+	                                                           "JZLnet/minecraft/world/dimension/DimensionType;" +
+	                                                           "ILnet/minecraft/world/level/LevelGeneratorType;IZZ)V"),
+	            index = 4)
 	private DimensionType fukkit_getType(DimensionType type) {
 		return ((DimensionTypeAccess) type).getType();
 	}
 
-	@Inject (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;" +
+	                                                        "sendPacket(Lnet/minecraft/network/Packet;)V",
+	                                               ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void fukkit_sendSupported(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
 		((CraftPlayer) ((EntityAccess) player).getBukkit()).sendSupportedChannels();
 	}
 
-	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;sendToAll(Lnet/minecraft/text/Text;)V", ordinal = 0))
+	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                                 target = "Lnet/minecraft/server/PlayerManager;sendToAll" +
+	                                                          "(Lnet/minecraft/text/Text;)V",
+	                                                 ordinal = 0))
 	private void fukkit_joinmsg(PlayerManager manager, Text text) {
 		JOIN_MESSAGES.set(CraftChatMessage.fromComponent(text));
 	}
 
-	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;sendToAll(Lnet/minecraft/network/Packet;)V", ordinal = 0))
+	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                                 target = "Lnet/minecraft/server/PlayerManager;sendToAll" +
+	                                                          "(Lnet/minecraft/network/Packet;)V",
+	                                                 ordinal = 0))
 	private void fukkit_voidSendAll(PlayerManager manager, Packet<?> packet) {
 	}
 
@@ -175,8 +184,14 @@ public abstract class PlayerManagerMixin {
 		return 0;
 	}
 
-	@Inject (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;sendToAll(Lnet/minecraft/network/Packet;)V", ordinal = 0), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_playerJoinEvent(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci, GameProfile gameProfile, UserCache userCache, String string, CompoundTag compoundTag, ServerWorld serverWorld) {
+	@Inject (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/PlayerManager;sendToAll" +
+	                                                        "(Lnet/minecraft/network/Packet;)V",
+	                                               ordinal = 0), cancellable = true,
+	         locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_playerJoinEvent(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci,
+	                                    GameProfile gameProfile, UserCache userCache, String string,
+	                                    CompoundTag compoundTag, ServerWorld serverWorld) {
 		String join = JOIN_MESSAGES.get();
 		PlayerJoinEvent event = new PlayerJoinEvent(this.craftServer.getPlayer(player), join);
 		this.craftServer.getPluginManager().callEvent(event);
@@ -195,7 +210,8 @@ public abstract class PlayerManagerMixin {
 		PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, player);
 		for (int i = 0; i < this.players.size(); i++) {
 			ServerPlayerEntity otherPlayer = this.players.get(i);
-			if (((CraftPlayer) ((EntityAccess) otherPlayer).getBukkit()).canSee((Player) ((EntityAccess) player).getBukkit())) {
+			if (((CraftPlayer) ((EntityAccess) otherPlayer).getBukkit())
+			    .canSee((Player) ((EntityAccess) player).getBukkit())) {
 				otherPlayer.networkHandler.sendPacket(packet);
 			}
 
@@ -203,11 +219,13 @@ public abstract class PlayerManagerMixin {
 				continue;
 			}
 
-			player.networkHandler.sendPacket(new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, otherPlayer));
+			player.networkHandler
+			.sendPacket(new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, otherPlayer));
 		}
 		((ServerPlayerEntityAccess) player).setHasSentListPacket(true);
 
-		player.networkHandler.sendPacket(new EntityTrackerUpdateS2CPacket(player.getEntityId(), player.getDataTracker(), true));
+		player.networkHandler
+		.sendPacket(new EntityTrackerUpdateS2CPacket(player.getEntityId(), player.getDataTracker(), true));
 
 		if (player.world == serverWorld && !serverWorld.getPlayers().contains(player)) {
 			serverWorld.onPlayerConnected(player);
@@ -215,42 +233,55 @@ public abstract class PlayerManagerMixin {
 		}
 	}
 
-	@Inject (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;onPlayerConnected(Lnet/minecraft/server/network/ServerPlayerEntity;)V"))
+	@Inject (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/world/ServerWorld;onPlayerConnected" +
+	                                                        "(Lnet/minecraft/server/network/ServerPlayerEntity;)V"))
 	private void fukkit_setWorld(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
 		SERVER_PLAYER_ENTITY.set(player);
 	}
 
-	@ModifyVariable (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;onPlayerConnected(Lnet/minecraft/server/network/ServerPlayerEntity;)V"), index = 8, ordinal = 0)
+	@ModifyVariable (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                                       target = "Lnet/minecraft/server/world/ServerWorld;" +
+	                                                                "onPlayerConnected(Lnet/minecraft/server/network" +
+	                                                                "/ServerPlayerEntity;)V"),
+	                 index = 8, ordinal = 0)
 	private ServerWorld fukkit_setWorld(ServerWorld world) {
 		ServerPlayerEntity playerEntity = SERVER_PLAYER_ENTITY.get();
 		SERVER_PLAYER_ENTITY.set(null);
 		return this.server.getWorld(playerEntity.dimension);
 	}
 
-	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;onPlayerConnected(Lnet/minecraft/server/network/ServerPlayerEntity;)V"))
+	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                                 target = "Lnet/minecraft/server/world/ServerWorld;" +
+	                                                          "onPlayerConnected(Lnet/minecraft/server/network" +
+	                                                          "/ServerPlayerEntity;)V"))
 	private void fukkit_voidCall(ServerWorld world, ServerPlayerEntity player) {
 
 	}
 
-	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/boss/BossBarManager;onPlayerConnect(Lnet/minecraft/server/network/ServerPlayerEntity;)V"))
+	@Redirect (method = "onPlayerConnect", at = @At (value = "INVOKE",
+	                                                 target = "Lnet/minecraft/entity/boss/BossBarManager;" +
+	                                                          "onPlayerConnect(Lnet/minecraft/server/network" +
+	                                                          "/ServerPlayerEntity;)V"))
 	private void fukkit_voidCall0(BossBarManager manager, ServerPlayerEntity player) {
 
 	}
 
-	// TODO verify ln 266 is needed
-
 	@Inject (method = "onPlayerConnect", at = @At ("TAIL")) // intentional TAIL
 	private void fukkit_connected(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
 		// fukkit: imperfect copy, not really important though.
-		LOGGER.info("{} logged in with entity id {} at {}", player.getName().getString(), player.getEntityId(), player.getBlockPos());
+		LOGGER.info("{} logged in with entity id {} at {}", player.getName().getString(), player.getEntityId(), player
+		                                                                                                        .getBlockPos());
 	}
 
 	@Inject (method = "setMainWorld", at = @At ("HEAD"), cancellable = true)
 	private void fukkit_saveHandler(ServerWorld world, CallbackInfo ci) {
-		if (this.saveHandler != null) ci.cancel();
+		if (this.saveHandler != null) { ci.cancel(); }
 	}
 
-	@Redirect (method = "setMainWorld", at = @At (value = "INVOKE", target = "Lnet/minecraft/world/border/WorldBorder;addListener(Lnet/minecraft/world/border/WorldBorderListener;)V"))
+	@Redirect (method = "setMainWorld", at = @At (value = "INVOKE",
+	                                              target = "Lnet/minecraft/world/border/WorldBorder;addListener" +
+	                                                       "(Lnet/minecraft/world/border/WorldBorderListener;)V"))
 	private void fukkit_newListener(WorldBorder border, WorldBorderListener listener) {
 		// TODO verify if it's the same listener
 		border.addListener(new CraftWorldBorderListener(((WorldBorderAccess) border).getServerWorld()));
@@ -258,23 +289,33 @@ public abstract class PlayerManagerMixin {
 
 	@Inject (method = "savePlayerData", at = @At ("HEAD"), cancellable = true)
 	private void fukkit_nonPersistentPlayers(ServerPlayerEntity player, CallbackInfo ci) {
-		if (!((ServerPlayerEntityAccess) player).getBukkit().isPersistent()) ci.cancel();
+		if (!((ServerPlayerEntityAccess) player).getBukkit().isPersistent()) { ci.cancel(); }
 		SERVER_PLAYER_ENTITY_2.set(player);
 	}
 
-	@Redirect (method = "savePlayerData", at = @At (value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;", ordinal = 0))
+	@Redirect (method = "savePlayerData",
+	           at = @At (value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;",
+	                     ordinal = 0))
 	private Object fukkit_differentStatHandler(Map map, Object key) {
 		ServerPlayerEntity entity = SERVER_PLAYER_ENTITY_2.get();
-		SERVER_PLAYER_ENTITY_2.set(null); // I do not know if ServerStatHandler#save has any unintended side effects that may call this method recursively, I doubt it does but better safe than sorry
+		SERVER_PLAYER_ENTITY_2
+		.set(null); // I do not know if ServerStatHandler#save has any unintended side effects that may call this
+		// method recursively, I doubt it does but better safe than sorry
 		return entity.getStatHandler();
 	}
 
-	@Inject (method = "savePlayerData", at = @At (value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;", ordinal = 1))
+	@Inject (method = "savePlayerData",
+	         at = @At (value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;",
+	                   ordinal = 1))
 	private void fukkit_getArgs(ServerPlayerEntity player, CallbackInfo ci) {
 		SERVER_PLAYER_ENTITY_2.set(player);
 	}
 
-	@Redirect (method = "savePlayerData", at = @At (value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;", ordinal = 1))
+	// TODO verify ln 266 is needed
+
+	@Redirect (method = "savePlayerData",
+	           at = @At (value = "INVOKE", target = "Ljava/util/Map;get(Ljava/lang/Object;)Ljava/lang/Object;",
+	                     ordinal = 1))
 	private Object fukkit_newPlayerAdvancementTracker(Map map, Object key) {
 		ServerPlayerEntity entity = SERVER_PLAYER_ENTITY_2.get();
 		SERVER_PLAYER_ENTITY_2.set(null);
@@ -289,7 +330,9 @@ public abstract class PlayerManagerMixin {
 		// CraftBukkit start - Quitting must be before we do final save of data, in case plugins need to modify it
 		org.bukkit.craftbukkit.event.CraftEventFactory.handleInventoryCloseEvent(entityplayer);
 
-		PlayerQuitEvent playerQuitEvent = new PlayerQuitEvent(this.craftServer.getPlayer(entityplayer), "\u00A7e" + entityplayer.getEntityName() + " left the game");
+		PlayerQuitEvent playerQuitEvent = new PlayerQuitEvent(this.craftServer
+		                                                      .getPlayer(entityplayer), "\u00A7e" + entityplayer
+		                                                                                            .getEntityName() + " left the game");
 		this.craftServer.getPluginManager().callEvent(playerQuitEvent);
 		((ServerPlayerEntityAccess) entityplayer).getBukkit().disconnect(playerQuitEvent.getQuitMessage());
 
@@ -333,15 +376,19 @@ public abstract class PlayerManagerMixin {
 		}
 
 		// CraftBukkit start
-		//  this.sendAll(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.REMOVE_PLAYER, new EntityPlayer[]{entityplayer}));
+		//  this.sendAll(new PacketPlayOutPlayerInfo(EnumPlayerInfoAction.REMOVE_PLAYER, new
+		//  EntityPlayer[]{entityplayer}));
 		PlayerListS2CPacket packet = new PlayerListS2CPacket(PlayerListS2CPacket.Action.REMOVE_PLAYER, entityplayer);
 		for (int i = 0; i < this.players.size(); i++) {
 			ServerPlayerEntity entityplayer2 = this.players.get(i);
 
-			if (((ServerPlayerEntityAccess) entityplayer2).getBukkit().canSee(((ServerPlayerEntityAccess) entityplayer).getBukkit())) {
+			if (((ServerPlayerEntityAccess) entityplayer2).getBukkit().canSee(((ServerPlayerEntityAccess) entityplayer)
+			                                                                  .getBukkit())) {
 				entityplayer2.networkHandler.sendPacket(packet);
 			} else {
-				((ServerPlayerEntityAccess) entityplayer2).getBukkit().removeDisconnectingPlayer(((ServerPlayerEntityAccess) entityplayer).getBukkit());
+				((ServerPlayerEntityAccess) entityplayer2).getBukkit()
+				                                          .removeDisconnectingPlayer(((ServerPlayerEntityAccess) entityplayer)
+				                                                                     .getBukkit());
 			}
 		}
 		// This removes the scoreboard (and player reference) for the specific player in the manager
@@ -351,8 +398,13 @@ public abstract class PlayerManagerMixin {
 		return playerQuitEvent.getQuitMessage(); // CraftBukkit
 	}
 
-	// CraftBukkit start - Whole method, SocketAddress to LoginListener, added hostname to signature, return EntityPlayer
-	public ServerPlayerEntity fukkit$attemptLogin(ServerLoginNetworkHandler loginlistener, GameProfile gameprofile, String hostname) {
+	@Shadow
+	protected abstract void savePlayerData(ServerPlayerEntity player);
+
+	// CraftBukkit start - Whole method, SocketAddress to LoginListener, added hostname to signature, return
+	// EntityPlayer
+	public ServerPlayerEntity fukkit$attemptLogin(ServerLoginNetworkHandler loginlistener, GameProfile gameprofile,
+	                                              String hostname) {
 		TranslatableText chatmessage;
 
 		// Moved from processLogin
@@ -380,16 +432,24 @@ public abstract class PlayerManagerMixin {
 		// in the event, check with plugins to see if it's ok, and THEN kick
 		// depending on the outcome.
 		SocketAddress socketaddress = loginlistener.connection.getAddress();
-		ServerPlayerEntity entity = new ServerPlayerEntity(this.server, this.server.getWorld(DimensionType.OVERWORLD), gameprofile, new ServerPlayerInteractionManager(this.server.getWorld(DimensionType.OVERWORLD)));
+		ServerPlayerEntity entity = new ServerPlayerEntity(this.server, this.server
+		                                                                .getWorld(DimensionType.OVERWORLD),
+		gameprofile, new ServerPlayerInteractionManager(this.server
+		                                                                                                                                                    .getWorld(DimensionType.OVERWORLD)));
 		Player player = ((ServerPlayerEntityAccess) entity).getBukkit();
-		PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress).getAddress());
+		PlayerLoginEvent event = new PlayerLoginEvent(player, hostname, ((java.net.InetSocketAddress) socketaddress)
+		                                                                .getAddress());
 
-		if (this.getUserBanList().contains(gameprofile) && !BanEntryUtil.isInvalid(this.getUserBanList().get(gameprofile))) {
+		if (this.getUserBanList().contains(gameprofile) && !BanEntryUtil
+		                                                    .isInvalid(this.getUserBanList().get(gameprofile))) {
 			BannedPlayerEntry gameprofilebanentry = this.bannedProfiles.get(gameprofile);
 
-			chatmessage = new TranslatableText("multiplayer.disconnect.banned.reason", gameprofilebanentry.getReason());
+			chatmessage = new TranslatableText("multiplayer.disconnect.banned.reason",
+			gameprofilebanentry.getReason());
 			if (gameprofilebanentry.getExpiryDate() != null) {
-				chatmessage.append(new TranslatableText("multiplayer.disconnect.banned.expiration", DATE_FORMATTER.format(gameprofilebanentry.getExpiryDate())));
+				chatmessage.append(new TranslatableText("multiplayer.disconnect.banned.expiration", DATE_FORMATTER
+				                                                                                    .format(gameprofilebanentry
+				                                                                                            .getExpiryDate())));
 			}
 
 			// return chatmessage;
@@ -397,18 +457,22 @@ public abstract class PlayerManagerMixin {
 		} else if (!this.isWhitelisted(gameprofile)) {
 			chatmessage = new TranslatableText("multiplayer.disconnect.not_whitelisted");
 			event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, CraftChatMessage.fromComponent(chatmessage));
-		} else if (this.getIpBanList().isBanned(socketaddress) && !BanEntryUtil.isInvalid(this.getIpBanList().get(socketaddress))) {
+		} else if (this.getIpBanList().isBanned(socketaddress) && !BanEntryUtil
+		                                                           .isInvalid(this.getIpBanList().get(socketaddress))) {
 			BannedIpEntry ipbanentry = this.bannedIps.get(socketaddress);
 
 			chatmessage = new TranslatableText("multiplayer.disconnect.banned_ip.reason", ipbanentry.getReason());
 			if (ipbanentry.getExpiryDate() != null) {
-				chatmessage.append(new TranslatableText("multiplayer.disconnect.banned_ip.expiration", DATE_FORMATTER.format(ipbanentry.getExpiryDate())));
+				chatmessage.append(new TranslatableText("multiplayer.disconnect.banned_ip.expiration", DATE_FORMATTER
+				                                                                                       .format(ipbanentry
+				                                                                                               .getExpiryDate())));
 			}
 
 			// return chatmessage;
 			event.disallow(PlayerLoginEvent.Result.KICK_BANNED, CraftChatMessage.fromComponent(chatmessage));
 		} else {
-			// return this.players.size() >= this.maxPlayers && !this.f(gameprofile) ? new ChatMessage("multiplayer.disconnect.server_full", new Object[0]) : null;
+			// return this.players.size() >= this.maxPlayers && !this.f(gameprofile) ? new ChatMessage("multiplayer
+			// .disconnect.server_full", new Object[0]) : null;
 			if (this.players.size() >= this.maxPlayers && !this.canBypassPlayerLimit(gameprofile)) {
 				event.disallow(PlayerLoginEvent.Result.KICK_FULL, "The server is full");
 			}
@@ -423,18 +487,60 @@ public abstract class PlayerManagerMixin {
 		return entity;
 	}
 
-	public ServerPlayerEntity fukkit$processLogin(GameProfile gameprofile, ServerPlayerEntity player) { // CraftBukkit - added EntityPlayer
+	@Shadow
+	public abstract BannedPlayerList getUserBanList();
+
+	@Shadow
+	public abstract boolean isWhitelisted(GameProfile gameProfile);
+
+	@Shadow
+	public abstract BannedIpList getIpBanList();
+
+	@Shadow
+	public abstract boolean canBypassPlayerLimit(GameProfile gameProfile);
+
+	public ServerPlayerEntity fukkit$processLogin(GameProfile gameprofile, ServerPlayerEntity player) { // CraftBukkit
+		// - added EntityPlayer
 		// moved up... :md5pls:
 		return player;
 	}
 
+	public void fukkit$sendAll(Packet packet, PlayerEntity entityhuman) {
+		for (int i = 0; i < this.players.size(); ++i) {
+			ServerPlayerEntity entityplayer = this.players.get(i);
+			if (entityhuman instanceof ServerPlayerEntity && !((ServerPlayerEntityAccess) entityplayer).getBukkit()
+			                                                                                           .canSee(((ServerPlayerEntityAccess) entityhuman)
+			                                                                                                   .getBukkit())) {
+				continue;
+			}
+			this.players.get(i).networkHandler.sendPacket(packet);
+		}
+	}
+
+	public void fukkit$sendAll(Packet<?> packet, World world) {
+		for (int i = 0; i < world.getPlayers().size(); ++i) {
+			((ServerPlayerEntity) world.getPlayers().get(i)).networkHandler.sendPacket(packet);
+		}
+	}
+
+	public void fukkit$sendMessage(Text[] lines) {
+		for (Text line : lines) {
+			this.broadcastChatMessage(line, true);
+		}
+	}
+
+	@Shadow public abstract void broadcastChatMessage(Text text, boolean system);
+
 	/**
-	public ServerPlayerEntity respawnPlayer(ServerPlayerEntity entityplayer, DimensionType dimensionmanager, boolean flag) {
-		return this.fukkit$moveToWorld(entityplayer, dimensionmanager, flag, null, true);
-	}*/
+	 * public ServerPlayerEntity respawnPlayer(ServerPlayerEntity entityplayer, DimensionType dimensionmanager,
+	 * boolean flag) {
+	 * return this.fukkit$moveToWorld(entityplayer, dimensionmanager, flag, null, true);
+	 * }
+	 */
 
 	// TODO fix
-	/*public ServerPlayerEntity fukkit$moveToWorld(ServerPlayerEntity playerEntity, DimensionType dimensionType, boolean alive, Location location, boolean avoidSuffocation) {
+	/*public ServerPlayerEntity fukkit$moveToWorld(ServerPlayerEntity playerEntity, DimensionType dimensionType,
+	boolean alive, Location location, boolean avoidSuffocation) {
 		playerEntity.stopRiding(); // CraftBukkit
 		this.players.remove(playerEntity);
 		playerEntity.getServerWorld().removePlayer(playerEntity);
@@ -454,14 +560,16 @@ public abstract class PlayerManagerMixin {
 			newPlayer.addScoreboardTag(s);
 		}
 
-		// WorldServer worldserver = this.server.getWorldServer(entityplayer.dimension);  // CraftBukkit - handled later
+		// WorldServer worldserver = this.server.getWorldServer(entityplayer.dimension);  // CraftBukkit - handled
+		later
 
 		// this.a(entityplayer1, entityplayer, worldserver); // CraftBukkit - removed
 
 		// CraftBukkit start - fire PlayerRespawnEvent
 		if (location == null) {
 			boolean isBedSpawn = false;
-			CraftWorld craftWorld = (CraftWorld) ((MinecraftServerAccess) this.server).getBukkit().getWorld(playerEntity.spawnWorld);
+			CraftWorld craftWorld = (CraftWorld) ((MinecraftServerAccess) this.server).getBukkit().getWorld
+			(playerEntity.spawnWorld);
 			if (craftWorld != null && blockposition != null) {
 				Optional<Vec3d> optional = PlayerEntity.getBed(craftWorld.getHandle(), blockposition, flag1);
 
@@ -479,7 +587,8 @@ public abstract class PlayerManagerMixin {
 			if (location == null) {
 				craftWorld = (CraftWorld) ((MinecraftServerAccess) this.server).getBukkit().getWorlds().get(0);
 				blockposition = newPlayer.getSpawnPoint(craftWorld.getHandle());
-				location = new Location(craftWorld, (float) blockposition.getX() + 0.5F, (float) blockposition.getY() + 0.1F, (float) blockposition.getZ() + 0.5F);
+				location = new Location(craftWorld, (float) blockposition.getX() + 0.5F, (float) blockposition.getY()
+				+ 0.1F, (float) blockposition.getZ() + 0.5F);
 			}
 
 			Player respawnPlayer = this.craftServer.getPlayer(newPlayer);
@@ -492,7 +601,8 @@ public abstract class PlayerManagerMixin {
 			location.setWorld(((WorldAccess) this.server.getWorld(dimensionType)).getBukkit());
 		}
 		ServerWorld serverWorld = ((CraftWorld) location.getWorld()).getHandle();
-		((ServerPlayerEntityAccess)newPlayer).forceSetPositionRotation(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
+		((ServerPlayerEntityAccess)newPlayer).forceSetPositionRotation(location.getX(), location.getY(), location.getZ
+		(), location.getYaw(), location.getPitch());
 		// CraftBukkit end
 
 		while (avoidSuffocation && !serverWorld.doesNotCollide(newPlayer) && newPlayer.getY() < 256.0D) {
@@ -501,22 +611,31 @@ public abstract class PlayerManagerMixin {
 		// CraftBukkit start
 		// Force the client to refresh their chunk cache
 		if (fromWorld.getEnvironment() == ((WorldAccess) serverWorld).getBukkit().getEnvironment()) {
-			newPlayer.networkHandler.sendPacket(new PlayerRespawnS2CPacket(serverWorld.dimension.getType().getRawId() >= 0 ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, LevelProperties.c(serverWorld.getLevelProperties().getSeed()), serverWorld.getLevelProperties().getGeneratorType(), playerEntity.interactionManager.getGameMode()));
+			newPlayer.networkHandler.sendPacket(new PlayerRespawnS2CPacket(serverWorld.dimension.getType().getRawId()
+			>= 0 ? DimensionType.THE_NETHER : DimensionType.OVERWORLD, LevelProperties.c(serverWorld
+			.getLevelProperties().getSeed()), serverWorld.getLevelProperties().getGeneratorType(), playerEntity
+			.interactionManager.getGameMode()));
 		}
 
 		LevelProperties worlddata = serverWorld.getLevelProperties();
 
-		newPlayer.networkHandler.sendPacket(new PlayerRespawnS2CPacket(((DimensionTypeAccess) serverWorld.dimension.getType()).getType(), LevelProperties.c(serverWorld.getLevelProperties().getSeed()), serverWorld.getLevelProperties().getGeneratorType(), newPlayer.interactionManager.getGameMode()));
+		newPlayer.networkHandler.sendPacket(new PlayerRespawnS2CPacket(((DimensionTypeAccess) serverWorld.dimension
+		.getType()).getType(), LevelProperties.c(serverWorld.getLevelProperties().getSeed()), serverWorld
+		.getLevelProperties().getGeneratorType(), newPlayer.interactionManager.getGameMode()));
 		newPlayer.setWorld(serverWorld);
 		newPlayer.removed = false;
-		newPlayer.networkHandler.teleport(new Location(((WorldAccess) serverWorld).getBukkit(), newPlayer.getX(), newPlayer.getY(), newPlayer.getZ(), newPlayer.yaw, newPlayer.pitch));
+		newPlayer.networkHandler.teleport(new Location(((WorldAccess) serverWorld).getBukkit(), newPlayer.getX(),
+		newPlayer.getY(), newPlayer.getZ(), newPlayer.yaw, newPlayer.pitch));
 		newPlayer.setSneaking(false);
 		BlockPos spawnPos = serverWorld.getSpawnPos();
 
-		// entityplayer1.playerConnection.a(entityplayer1.locX(), entityplayer1.locY(), entityplayer1.locZ(), entityplayer1.yaw, entityplayer1.pitch);
+		// entityplayer1.playerConnection.a(entityplayer1.locX(), entityplayer1.locY(), entityplayer1.locZ(),
+		entityplayer1.yaw, entityplayer1.pitch);
 		newPlayer.networkHandler.sendPacket(new PlayerSpawnPositionS2CPacket(spawnPos));
-		newPlayer.networkHandler.sendPacket(new DifficultyS2CPacket(worlddata.getDifficulty(), worlddata.isDifficultyLocked()));
-		newPlayer.networkHandler.sendPacket(new ExperienceBarUpdateS2CPacket(newPlayer.experienceProgress, newPlayer.totalExperience, newPlayer.experienceLevel));
+		newPlayer.networkHandler.sendPacket(new DifficultyS2CPacket(worlddata.getDifficulty(), worlddata
+		.isDifficultyLocked()));
+		newPlayer.networkHandler.sendPacket(new ExperienceBarUpdateS2CPacket(newPlayer.experienceProgress, newPlayer
+		.totalExperience, newPlayer.experienceLevel));
 		this.sendWorldInfo(newPlayer, serverWorld);
 		this.sendCommandTree(newPlayer);
 
@@ -532,7 +651,8 @@ public abstract class PlayerManagerMixin {
 		playerEntity.sendAbilitiesUpdate();
 		for (Object o1 : playerEntity.getStatusEffects()) {
 			StatusEffectInstance mobEffect = (StatusEffectInstance) o1;
-			playerEntity.networkHandler.sendPacket(new EntityPotionEffectS2CPacket(playerEntity.getEntityId(), mobEffect));
+			playerEntity.networkHandler.sendPacket(new EntityPotionEffectS2CPacket(playerEntity.getEntityId(),
+			mobEffect));
 		}
 
 		// Fire advancement trigger
@@ -540,7 +660,8 @@ public abstract class PlayerManagerMixin {
 
 		// Don't fire on respawn
 		if (fromWorld != location.getWorld()) {
-			PlayerChangedWorldEvent event = new PlayerChangedWorldEvent((Player) ((EntityAccess) playerEntity).getBukkit(), fromWorld);
+			PlayerChangedWorldEvent event = new PlayerChangedWorldEvent((Player) ((EntityAccess) playerEntity)
+			.getBukkit(), fromWorld);
 			((MinecraftServerAccess) this.server).getBukkit().getPluginManager().callEvent(event);
 		}
 
@@ -551,112 +672,129 @@ public abstract class PlayerManagerMixin {
 		// CraftBukkit end
 		return newPlayer;
 	}*/
-
-	@Redirect (method = "updatePlayerLatency", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;sendToAll(Lnet/minecraft/network/Packet;)V"))
+	@Redirect (method = "updatePlayerLatency", at = @At (value = "INVOKE",
+	                                                     target = "Lnet/minecraft/server/PlayerManager;sendToAll" +
+	                                                              "(Lnet/minecraft/network/Packet;)V"))
 	private void fukkit_invisOrSomething(PlayerManager manager, Packet<?> packet) {
 		for (int i = 0; i < this.players.size(); i++) {
 			final ServerPlayerEntity target = this.players.get(0);
-			target.networkHandler.sendPacket(new PlayerListS2CPacket(PlayerListS2CPacket.Action.UPDATE_LATENCY, this.players.stream().filter(e -> ((ServerPlayerEntityAccess) target).getBukkit().canSee(((ServerPlayerEntityAccess) e).getBukkit())).collect(Collectors.toList())));
+			target.networkHandler
+			.sendPacket(new PlayerListS2CPacket(PlayerListS2CPacket.Action.UPDATE_LATENCY, this.players.stream()
+			                                                                                           .filter(e -> ((ServerPlayerEntityAccess) target)
+			                                                                                                        .getBukkit()
+			                                                                                                        .canSee(((ServerPlayerEntityAccess) e)
+			                                                                                                                .getBukkit()))
+			                                                                                           .collect(Collectors
+			                                                                                                    .toList())));
 		}
 	}
 
-	public void fukkit$sendAll(Packet packet, PlayerEntity entityhuman) {
-		for (int i = 0; i < this.players.size(); ++i) {
-			ServerPlayerEntity entityplayer = this.players.get(i);
-			if (entityhuman instanceof ServerPlayerEntity && !((ServerPlayerEntityAccess) entityplayer).getBukkit().canSee(((ServerPlayerEntityAccess) entityhuman).getBukkit())) {
-				continue;
-			}
-			this.players.get(i).networkHandler.sendPacket(packet);
-		}
-	}
-
-	public void fukkit$sendAll(Packet<?> packet, World world) {
-		for (int i = 0; i < world.getPlayers().size(); ++i) {
-			((ServerPlayerEntity) world.getPlayers().get(i)).networkHandler.sendPacket(packet);
-		}
-	}
-
-	@Inject(method = "sendCommandTree(Lnet/minecraft/server/network/ServerPlayerEntity;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/command/CommandManager;sendCommandTree(Lnet/minecraft/server/network/ServerPlayerEntity;)V"))
+	@Inject (method = "sendCommandTree(Lnet/minecraft/server/network/ServerPlayerEntity;I)V",
+	         at = @At (value = "INVOKE",
+	                   target = "Lnet/minecraft/server/command/CommandManager;sendCommandTree" +
+	                            "(Lnet/minecraft/server/network/ServerPlayerEntity;)V"))
 	private void fukkit_recalcPerms(ServerPlayerEntity player, int permissionLevel, CallbackInfo ci) {
-		((ServerPlayerEntityAccess)player).getBukkit().recalculatePermissions();
+		((ServerPlayerEntityAccess) player).getBukkit().recalculatePermissions();
 	}
 
-	@Inject(method = "sendToAround", at = @At(value = "JUMP", ordinal = 0, opcode = Opcodes.IF_ACMPNE), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_verifySight(PlayerEntity player, double x, double y, double z, double d, DimensionType dimension, Packet<?> packet, CallbackInfo ci, int i, ServerPlayerEntity otherPlayer) {
-		if(player instanceof ServerPlayerEntity && !((ServerPlayerEntityAccess) player).getBukkit().canSee(((ServerPlayerEntityAccess) otherPlayer).getBukkit())) {
+	@Inject (method = "sendToAround", at = @At (value = "JUMP", ordinal = 0, opcode = Opcodes.IF_ACMPNE),
+	         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_verifySight(PlayerEntity player, double x, double y, double z, double d,
+	                                DimensionType dimension, Packet<?> packet, CallbackInfo ci, int i,
+	                                ServerPlayerEntity otherPlayer) {
+		if (player instanceof ServerPlayerEntity && !((ServerPlayerEntityAccess) player).getBukkit()
+		                                                                                .canSee(((ServerPlayerEntityAccess) otherPlayer)
+		                                                                                        .getBukkit())) {
 			ci.cancel();
 		}
 	}
 
-	@ModifyVariable(method = "sendWorldInfo", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 0))
+	@ModifyVariable (method = "sendWorldInfo", at = @At (value = "INVOKE",
+	                                                     target = "Lnet/minecraft/server/network" +
+	                                                              "/ServerPlayNetworkHandler;sendPacket" +
+	                                                              "(Lnet/minecraft/network/Packet;)V",
+	                                                     ordinal = 0))
 	private WorldBorder fukkit_diffBorder(WorldBorder border, ServerPlayerEntity player, ServerWorld world) {
 		return player.world.getWorldBorder();
 	}
 
-	@Inject(method = "sendWorldInfo", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 5, shift = At.Shift.AFTER))
+	@Inject (method = "sendWorldInfo", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;" +
+	                                                      "sendPacket(Lnet/minecraft/network/Packet;)V",
+	                                             ordinal = 5, shift = At.Shift.AFTER))
 	private void fukkit_handlePlayerWeather(ServerPlayerEntity player, ServerWorld world, CallbackInfo ci) {
-		((ServerPlayerEntityAccess)player).setPlayerWeather(WeatherType.DOWNFALL, false);
+		((ServerPlayerEntityAccess) player).setPlayerWeather(WeatherType.DOWNFALL, false);
 		float rainGrad = world.getRainGradient(1f);
-		float thunderGrad = world.getThunderGradient(1f)/rainGrad;
-			((ServerPlayerEntityAccess)player).updateWeather(-rainGrad, rainGrad, -thunderGrad, thunderGrad);
+		float thunderGrad = world.getThunderGradient(1f) / rainGrad;
+		((ServerPlayerEntityAccess) player).updateWeather(-rainGrad, rainGrad, -thunderGrad, thunderGrad);
 	}
 
-	@Redirect(method = "sendWorldInfo", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 3))
+	@Redirect (method = "sendWorldInfo", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V",
+	                                               ordinal = 3))
 	private void fukkit_handlePlayerWeather0(ServerPlayNetworkHandler handler, Packet<?> packet) {
 
 	}
-	@Redirect(method = "sendWorldInfo", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 4))
+
+	@Redirect (method = "sendWorldInfo", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V",
+	                                               ordinal = 4))
 	private void fukkit_handlePlayerWeather1(ServerPlayNetworkHandler handler, Packet<?> packet) {
 
 	}
-	@Redirect(method = "sendWorldInfo", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V", ordinal = 5))
+
+	@Redirect (method = "sendWorldInfo", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;sendPacket(Lnet/minecraft/network/Packet;)V",
+	                                               ordinal = 5))
 	private void fukkit_handlePlayerWeather2(ServerPlayNetworkHandler handler, Packet<?> packet) {
 
 	}
 
-	@Redirect(method = "method_14594", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayerEntity;markHealthDirty()V"))
+	@Redirect (method = "method_14594", at = @At (value = "INVOKE",
+	                                              target = "Lnet/minecraft/server/network/ServerPlayerEntity;markHealthDirty()V"))
 	private void fukkit_updateScaledHealth(ServerPlayerEntity entity) {
-		((ServerPlayerEntityAccess)entity).getBukkit().updateScaledHealth();
+		((ServerPlayerEntityAccess) entity).getBukkit().updateScaledHealth();
 	}
 
-	@Inject(method = "method_14594", at = @At("TAIL"))
+	@Inject (method = "method_14594", at = @At ("TAIL"))
 	private void fukkit_gameRules(ServerPlayerEntity player, CallbackInfo ci) {
 		byte debugInfo = (byte) (player.world.getGameRules().getBoolean(GameRules.REDUCED_DEBUG_INFO) ? 22 : 23);
 		player.networkHandler.sendPacket(new EntityStatusS2CPacket(player, debugInfo));
 	}
 
-	@Redirect(method = "disconnectAllPlayers", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;disconnect(Lnet/minecraft/text/Text;)V"))
+	@Redirect (method = "disconnectAllPlayers", at = @At (value = "INVOKE",
+	                                                      target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;disconnect(Lnet/minecraft/text/Text;)V"))
 	private void fukkit_customShutdownMsg(ServerPlayNetworkHandler handler, Text text) {
 		//handler.disconnect(((MinecraftServerAccess)server).getBukkit().getShutdownMessage());
 	}
 
-	public void fukkit$sendMessage(Text[] lines) {
-		for (Text line : lines) {
-			this.broadcastChatMessage(line, true);
-		}
-	}
-
-	@ModifyArg(method = "broadcastChatMessage", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ChatMessageS2CPacket;<init>(Lnet/minecraft/text/Text;Lnet/minecraft/network/MessageType;)V"), index = 0)
+	@ModifyArg (method = "broadcastChatMessage", at = @At (value = "INVOKE",
+	                                                       target = "Lnet/minecraft/network/packet/s2c/play/ChatMessageS2CPacket;<init>(Lnet/minecraft/text/Text;Lnet/minecraft/network/MessageType;)V"),
+	            index = 0)
 	private Text fukkit_sendToAll(Text text) {
 		return CraftChatMessage.fixComponent(text);
 	}
 
-	@ModifyVariable(method = "createStatHandler", at = @At(value = "JUMP", ordinal = 1, opcode = Opcodes.IFNONNULL))
+	@ModifyVariable (method = "createStatHandler", at = @At (value = "JUMP", ordinal = 1, opcode = Opcodes.IFNONNULL))
 	private ServerStatHandler fukkit_createStatHandler(ServerStatHandler statHandler, PlayerEntity player) {
-		return ((ServerPlayerEntity)player).getStatHandler();
+		return ((ServerPlayerEntity) player).getStatHandler();
 	}
 
-	@Redirect(method = "createStatHandler", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+	@Redirect (method = "createStatHandler", at = @At (value = "INVOKE",
+	                                                   target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
 	private <K, V> V fukkit_voidCall(Map map, K key, V value) {
 		return null;
 	}
 
-	@Redirect(method = "onDataPacksReloaded", at = @At(value = "INVOKE", target = "Ljava/util/Collection;iterator()Ljava/util/Iterator;", ordinal = 0))
+	@Redirect (method = "onDataPacksReloaded",
+	           at = @At (value = "INVOKE", target = "Ljava/util/Collection;iterator()Ljava/util/Iterator;",
+	                     ordinal = 0))
 	private Iterator fukkit_iterator(Collection collection) {
 		return Collections.emptyIterator(); // hahayes
 	}
 
-	@Inject(method = "onDataPacksReloaded", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;sendToAll(Lnet/minecraft/network/Packet;)V"))
+	@Inject (method = "onDataPacksReloaded", at = @At (value = "INVOKE",
+	                                                   target = "Lnet/minecraft/server/PlayerManager;sendToAll(Lnet/minecraft/network/Packet;)V"))
 	private void fukkit_flush(CallbackInfo ci) {
 		for (ServerPlayerEntity player : this.players) {
 			player.getAdvancementTracker().reload();

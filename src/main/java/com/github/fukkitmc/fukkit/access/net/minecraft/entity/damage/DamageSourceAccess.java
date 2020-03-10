@@ -4,5 +4,6 @@ import net.minecraft.entity.damage.DamageSource;
 
 public interface DamageSourceAccess {
 	boolean isSweep();
+
 	DamageSource sweep();
 }

@@ -19,28 +19,23 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Implements(@Interface(iface = LevelPropertiesAccess.class, prefix = "fukkit$"))
+@Implements (@Interface (iface = LevelPropertiesAccess.class, prefix = "fukkit$"))
 @Mixin (LevelProperties.class)
 public abstract class LevelPropertiesMixin {
+	public ServerWorld world;
 	@Shadow
 	private boolean thundering;
-
-	@Shadow
-	public abstract String getLevelName();
-
 	@Shadow
 	private boolean raining;
-
-	@Shadow public abstract Difficulty getDifficulty();
-
-	@Shadow public abstract boolean isDifficultyLocked();
-
 	@Shadow private String levelName;
-	public ServerWorld world;
 
-	@Inject (method = "<init>(Lnet/minecraft/nbt/CompoundTag;Lcom/mojang/datafixers/DataFixer;ILnet/minecraft/nbt/CompoundTag;)V", at = @At ("TAIL"))
+	@Inject (
+	method = "<init>(Lnet/minecraft/nbt/CompoundTag;Lcom/mojang/datafixers/DataFixer;ILnet/minecraft/nbt/CompoundTag;" +
+	         ")V",
+	at = @At ("TAIL"))
 	public void init(CompoundTag compoundTag, DataFixer dataFixer, int i, CompoundTag compoundTag2, CallbackInfo ci) {
-		compoundTag.putString("Bukkit.Version", Bukkit.getName() + "/" + Bukkit.getVersion() + "/" + Bukkit.getBukkitVersion());
+		compoundTag
+		.putString("Bukkit.Version", Bukkit.getName() + "/" + Bukkit.getVersion() + "/" + Bukkit.getBukkitVersion());
 	}
 
 	@Inject (method = "setThundering", at = @At ("HEAD"), cancellable = true)
@@ -53,9 +48,12 @@ public abstract class LevelPropertiesMixin {
 		if (world != null) {
 			ThunderChangeEvent thunder = new ThunderChangeEvent(world, thundering);
 			Bukkit.getServer().getPluginManager().callEvent(thunder);
-			if (thunder.isCancelled()) ci.cancel();
+			if (thunder.isCancelled()) { ci.cancel(); }
 		}
 	}
+
+	@Shadow
+	public abstract String getLevelName();
 
 	@Inject (method = "setRaining", at = @At ("HEAD"), cancellable = true)
 	public void raining(boolean raining, CallbackInfo ci) {
@@ -81,16 +79,19 @@ public abstract class LevelPropertiesMixin {
 		}
 	}
 
+	@Shadow public abstract Difficulty getDifficulty();
+
+	@Shadow public abstract boolean isDifficultyLocked();
+
+	public void fukkit$checkName(String name) {
+		if (!this.levelName.equals(name)) { this.levelName = name; }
+	}
+
 	public ServerWorld fukkit$getServerWorld() {
 		return this.world;
 	}
 
 	public void fukkit$setServerWorld(ServerWorld world) {
 		this.world = world;
-	}
-
-	public void fukkit$checkName(String name) {
-		if(!this.levelName.equals(name))
-			this.levelName = name;
 	}
 }

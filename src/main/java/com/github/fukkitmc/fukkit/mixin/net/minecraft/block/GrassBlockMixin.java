@@ -9,9 +9,12 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(GrassBlock.class)
+@Mixin (GrassBlock.class)
 public class GrassBlockMixin {
-	@Redirect(method = "grow", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+	@Redirect (method = "grow", at = @At (value = "INVOKE",
+	                                      target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                               "(Lnet/minecraft/util/math/BlockPos;" +
+	                                               "Lnet/minecraft/block/BlockState;I)Z"))
 	private boolean fukkit_growEvent(ServerWorld world, BlockPos pos, BlockState state, int flags) {
 		return CraftEventFactory.handleBlockGrowEvent(world, pos, state, flags);
 	}

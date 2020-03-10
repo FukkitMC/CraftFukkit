@@ -12,13 +12,19 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Random;
 
-@Mixin(LeavesBlock.class)
+@Mixin (LeavesBlock.class)
 public class LeavesBlockMixin {
-	@Inject(method = "randomTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/LeavesBlock;dropStacks(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"), cancellable = true)
+	@Inject (method = "randomTick", at = @At (value = "INVOKE",
+	                                          target = "Lnet/minecraft/block/LeavesBlock;dropStacks" +
+	                                                   "(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;" +
+	                                                   "Lnet/minecraft/util/math/BlockPos;)V"),
+	         cancellable = true)
 	private void fukkit_decayEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci) {
-		LeavesDecayEvent event = new LeavesDecayEvent(((WorldAccess)world).getBukkit().getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
-		((WorldAccess)world).getBukkitServer().getPluginManager().callEvent(event);
-		if(event.isCancelled() || world.getBlockState(pos).getBlock() != (Object)this) {
+		LeavesDecayEvent event = new LeavesDecayEvent(((WorldAccess) world).getBukkit()
+		                                                                   .getBlockAt(pos.getX(), pos.getY(), pos
+		                                                                                                       .getZ()));
+		((WorldAccess) world).getBukkitServer().getPluginManager().callEvent(event);
+		if (event.isCancelled() || world.getBlockState(pos).getBlock() != (Object) this) {
 			ci.cancel();
 		}
 	}

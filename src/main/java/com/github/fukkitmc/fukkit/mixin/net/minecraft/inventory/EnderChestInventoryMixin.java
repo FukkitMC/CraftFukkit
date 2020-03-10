@@ -7,12 +7,18 @@ import org.bukkit.Location;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(EnderChestInventory.class)
+@Mixin (EnderChestInventory.class)
 public class EnderChestInventoryMixin extends BasicInventoryMixin {
 	@Shadow private EnderChestBlockEntity currentBlockEntity;
 
 	@Override
 	public Location fukkit$getLocation() {
-		return new Location(((WorldAccess)this.currentBlockEntity.getWorld()).getBukkit(), this.currentBlockEntity.getPos().getX(), this.currentBlockEntity.getPos().getY(), this.currentBlockEntity.getPos().getZ());
+		return new Location(((WorldAccess) this.currentBlockEntity.getWorld()).getBukkit(), this.currentBlockEntity
+		                                                                                    .getPos()
+		                                                                                    .getX(), this.currentBlockEntity
+		                                                                                             .getPos()
+		                                                                                             .getY(), this.currentBlockEntity
+		                                                                                                      .getPos()
+		                                                                                                      .getZ());
 	}
 }

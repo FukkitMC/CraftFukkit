@@ -5,6 +5,8 @@ import org.bukkit.event.inventory.InventoryType;
 
 public interface CraftingInventoryAccess extends InventoryAccess {
 	InventoryType getInvType();
+
 	Inventory getResultInventory();
+
 	void setResultInventory(Inventory inventory);
 }

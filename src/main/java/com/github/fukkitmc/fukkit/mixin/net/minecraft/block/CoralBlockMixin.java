@@ -14,13 +14,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Random;
 
-@Mixin(CoralBlock.class)
+@Mixin (CoralBlock.class)
 public class CoralBlockMixin {
 	@Shadow @Final private Block deadCoralBlock;
 
-	@Inject(method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+	@Inject (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                                      "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/block/BlockState;I)Z"))
 	private void fukkit_fadeEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci) {
-		if(CraftEventFactory.callBlockFadeEvent(world, pos, this.deadCoralBlock.getDefaultState().with(CoralBlock.WATERLOGGED, false)).isCancelled())
-			ci.cancel();
+		if (CraftEventFactory
+		    .callBlockFadeEvent(world, pos, this.deadCoralBlock.getDefaultState().with(CoralBlock.WATERLOGGED, false))
+		    .isCancelled()) { ci.cancel(); }
 	}
 }

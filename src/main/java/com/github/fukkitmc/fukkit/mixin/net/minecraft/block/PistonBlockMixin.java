@@ -23,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.List;
-import java.util.Map;
 
 @Mixin (PistonBlock.class)
 public class PistonBlockMixin {
@@ -31,11 +30,16 @@ public class PistonBlockMixin {
 	@Final
 	private boolean isSticky;
 
-	@Inject (method = "tryMove", at = @At (value = "INVOKE", target = "Lnet/minecraft/world/World;addBlockAction(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;II)V", ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
+	@Inject (method = "tryMove", at = @At (value = "INVOKE",
+	                                       target = "Lnet/minecraft/world/World;addBlockAction" +
+	                                                "(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;" +
+	                                                "II)V",
+	                                       ordinal = 1), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
 	private void fukkit_sticky(World world, BlockPos pos, BlockState state, CallbackInfo ci, Direction direction) {
 		if (!this.isSticky) {
 			Block block = ((WorldAccess) world).getBukkit().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
-			BlockPistonRetractEvent event = new BlockPistonRetractEvent(block, ImmutableList.of(), CraftBlock.notchToBlockFace(direction));
+			BlockPistonRetractEvent event = new BlockPistonRetractEvent(block, ImmutableList.of(), CraftBlock
+			                                                                                       .notchToBlockFace(direction));
 			((WorldAccess) world).getBukkitServer().getPluginManager().callEvent(event);
 
 			if (event.isCancelled()) {
@@ -44,10 +48,15 @@ public class PistonBlockMixin {
 		}
 	}
 
-	@Inject (method = "move", at = @At (value = "INVOKE", target = "Lnet/minecraft/util/math/Direction;getOpposite()Lnet/minecraft/util/math/Direction;"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_pistonMoveEvent(World world, BlockPos pos, Direction dir, boolean retract, CallbackInfoReturnable<Boolean> cir, BlockPos pos1, PistonHandler handler) {
+	@Inject (method = "move", at = @At (value = "INVOKE",
+	                                    target = "Lnet/minecraft/util/math/Direction;getOpposite()" +
+	                                             "Lnet/minecraft/util/math/Direction;"),
+	         locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_pistonMoveEvent(World world, BlockPos pos, Direction dir, boolean retract,
+	                                    CallbackInfoReturnable<Boolean> cir, BlockPos pos1, PistonHandler handler) {
 		Direction direction = retract ? dir : dir.getOpposite();
-		final org.bukkit.block.Block bblock = ((WorldAccess)world).getBukkit().getBlockAt(pos.getX(), pos.getY(), pos.getZ());
+		final org.bukkit.block.Block bblock = ((WorldAccess) world).getBukkit()
+		                                                           .getBlockAt(pos.getX(), pos.getY(), pos.getZ());
 
 		final List<BlockPos> moved = handler.getMovedBlocks();
 		final List<BlockPos> broken = handler.getBrokenBlocks();
@@ -59,7 +68,7 @@ public class PistonBlockMixin {
 		} else {
 			event = new BlockPistonRetractEvent(bblock, blocks, CraftBlock.notchToBlockFace(direction));
 		}
-		((WorldAccess)world).getBukkitServer().getPluginManager().callEvent(event);
+		((WorldAccess) world).getBukkitServer().getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) {
 			for (BlockPos broke : broken) {

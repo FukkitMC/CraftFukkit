@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net/minecraft/block/ComposterBlock$ComposterInventory")
+@Mixin (targets = "net/minecraft/block/ComposterBlock$ComposterInventory")
 public abstract class ComposterBlock$FullComposterInventoryMixin extends BasicInventory implements SidedInventory {
 	@Shadow private boolean dirty;
 
@@ -25,14 +25,14 @@ public abstract class ComposterBlock$FullComposterInventoryMixin extends BasicIn
 
 	@Shadow @Final private BlockState state;
 
-	@Inject(method = "<init>", at = @At("TAIL"))
+	@Inject (method = "<init>", at = @At ("TAIL"))
 	private void onInit(BlockState state, IWorld world, BlockPos pos, CallbackInfo ci) {
-		((InventoryAccess)this).setOwner(new CraftBlockInventoryHolder(world, pos, (Inventory) this));
+		((InventoryAccess) this).setOwner(new CraftBlockInventoryHolder(world, pos, this));
 	}
 
-	@Inject(method = "markDirty", at = @At("HEAD"), cancellable = true)
+	@Inject (method = "markDirty", at = @At ("HEAD"), cancellable = true)
 	private void fukkit_allowPutback(CallbackInfo ci) {
-		if(!this.isInvEmpty()) {
+		if (!this.isInvEmpty()) {
 			this.dirty = false;
 			this.world.setBlockState(this.pos, this.state, 3);
 			ci.cancel();

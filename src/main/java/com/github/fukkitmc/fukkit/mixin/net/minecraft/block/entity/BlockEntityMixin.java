@@ -19,42 +19,45 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Implements(@Interface(iface = BlockEntityAccess.class, prefix = "fukkit$"))
-@Mixin(BlockEntity.class)
+@Implements (@Interface (iface = BlockEntityAccess.class, prefix = "fukkit$"))
+@Mixin (BlockEntity.class)
 public abstract class BlockEntityMixin {
-	@Shadow protected World world;
-	@Shadow protected BlockPos pos;
 	private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
 	public CraftPersistentDataContainer persistentDataContainer;
+	@Shadow protected World world;
+	@Shadow protected BlockPos pos;
 
-	@Inject(method = "fromTag", at = @At("RETURN"))
+	@Inject (method = "fromTag", at = @At ("RETURN"))
 	private void fukkit_persistentData(CompoundTag tag, CallbackInfo ci) {
 		this.persistentDataContainer = new CraftPersistentDataContainer(DATA_TYPE_REGISTRY);
 		CompoundTag bukkitValues = tag.getCompound("PublicBukkitValues");
-		if(bukkitValues != null)
-			this.persistentDataContainer.putAll(bukkitValues);
+		if (bukkitValues != null) { this.persistentDataContainer.putAll(bukkitValues); }
 	}
 
-	@Inject(method = "toTag", at = @At("RETURN"))
+	@Inject (method = "toTag", at = @At ("RETURN"))
 	private void fukkit_persistentData(CompoundTag tag, CallbackInfoReturnable<CompoundTag> cir) {
-		if(this.persistentDataContainer != null && !this.persistentDataContainer.isEmpty())
+		if (this.persistentDataContainer != null && !this.persistentDataContainer.isEmpty()) {
 			tag.put("PublicBukkitValues", this.persistentDataContainer.toTagCompound());
+		}
 	}
 
 
 	public InventoryHolder fukkit$getOwner() {
-		if(this.world == null)
-			return null;
-		BlockState state = ((WorldAccess) this.world).getBukkit().getBlockAt(this.pos.getX(), this.pos.getY(), this.pos.getZ()).getState();
+		if (this.world == null) { return null; }
+		BlockState state = ((WorldAccess) this.world).getBukkit()
+		                                             .getBlockAt(this.pos.getX(), this.pos.getY(), this.pos.getZ())
+		                                             .getState();
 		return state instanceof InventoryHolder ? (InventoryHolder) state : null;
 	}
 
 	public CraftPersistentDataContainer fukkit$getContainer() {
 		return this.persistentDataContainer;
 	}
+
 	public void fukkit$setContainer(CraftPersistentDataContainer container) {
 		this.persistentDataContainer = container;
 	}
+
 	public void fukkit$setWorld(World world) {
 		this.world = world;
 	}

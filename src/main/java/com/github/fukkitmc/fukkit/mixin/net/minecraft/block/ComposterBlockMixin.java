@@ -11,10 +11,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Coerce;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(ComposterBlock.class)
+@Mixin (ComposterBlock.class)
 public class ComposterBlockMixin {
 	@Coerce
-	@Redirect (method = "getInventory", at = @At(value = "NEW", target = "net/minecraft/block/ComposterBlock$DummyInventory"))
+	@Redirect (method = "getInventory",
+	           at = @At (value = "NEW", target = "net/minecraft/block/ComposterBlock$DummyInventory"))
 	private BasicInventory fukkit_newInvType(BlockState state, IWorld world, BlockPos pos) {
 		return Constructors.newComposterBlock$DummyInventory(world, pos);
 	}

@@ -8,8 +8,8 @@ import java.lang.annotation.Target;
 /**
  * represents an <b>access</b> class for a nms class
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.CLASS)
+@Target (ElementType.TYPE)
+@Retention (RetentionPolicy.CLASS)
 public @interface BukkitBridge {
 	Class<?> value();
 }

@@ -8,7 +8,7 @@ import net.minecraft.world.dimension.OverworldDimension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(OverworldDimension.class)
+@Mixin (OverworldDimension.class)
 public abstract class OverworldDimensionMixin extends Dimension {
 	public OverworldDimensionMixin(World world, DimensionType type, float f) {
 		super(world, type, f);
@@ -17,11 +17,12 @@ public abstract class OverworldDimensionMixin extends Dimension {
 
 	/**
 	 * handled by super
+	 *
 	 * @author HalfOf2
 	 */
 	@Override
 	@Overwrite
 	public DimensionType getType() {
-		return ((DimensionAccess)this).getType();
+		return ((DimensionAccess) this).getType();
 	}
 }

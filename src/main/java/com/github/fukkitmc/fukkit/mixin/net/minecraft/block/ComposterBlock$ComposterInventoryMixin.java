@@ -12,10 +12,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(targets = "net/minecraft/block/ComposterBlock$ComposterInventory")
+@Mixin (targets = "net/minecraft/block/ComposterBlock$ComposterInventory")
 public class ComposterBlock$ComposterInventoryMixin {
-	@Inject(method = "<init>", at = @At("TAIL"))
+	@Inject (method = "<init>", at = @At ("TAIL"))
 	private void fukkit_bukkitInventory(BlockState state, IWorld world, BlockPos pos, CallbackInfo ci) {
-		((InventoryAccess)this).setOwner(new CraftBlockInventoryHolder(world, pos, (Inventory) this));
+		((InventoryAccess) this).setOwner(new CraftBlockInventoryHolder(world, pos, (Inventory) this));
 	}
 }

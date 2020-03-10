@@ -17,27 +17,40 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Random;
 
-@Mixin(StemBlock.class)
+@Mixin (StemBlock.class)
 public class StemBlockMixin {
 	@Shadow @Final private GourdBlock gourdBlock;
 
-	@Redirect(method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+	@Redirect (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                                        "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                        "Lnet/minecraft/block/BlockState;I)Z"))
 	private boolean fukkit_growEvent(ServerWorld world, BlockPos pos, BlockState state, int flags) {
 		return CraftEventFactory.handleBlockGrowEvent(world, pos, state, flags);
 	}
 
-	@Inject (method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z", ordinal = 0), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_growEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci, Direction direction, BlockPos pos1) {
-		if(!CraftEventFactory.handleBlockGrowEvent(world, pos1, this.gourdBlock.getDefaultState()))
-			ci.cancel();
+	@Inject (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                                      "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/block/BlockState;)Z",
+	                                             ordinal = 0), cancellable = true,
+	         locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_growEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci,
+	                              Direction direction, BlockPos pos1) {
+		if (!CraftEventFactory.handleBlockGrowEvent(world, pos1, this.gourdBlock.getDefaultState())) { ci.cancel(); }
 	}
 
-	@Redirect(method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z", ordinal = 0))
+	@Redirect (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                                        "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                        "Lnet/minecraft/block/BlockState;)Z",
+	                                               ordinal = 0))
 	private boolean fukkit_growEvent(ServerWorld world, BlockPos pos, BlockState blockState) {
 		return false;
 	}
 
-	@Redirect(method = "grow", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+	@Redirect (method = "grow", at = @At (value = "INVOKE",
+	                                      target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
 	private boolean fukkit_growEvent2(ServerWorld world, BlockPos pos, BlockState state, int flags) {
 		return CraftEventFactory.handleBlockGrowEvent(world, pos, state, flags);
 	}

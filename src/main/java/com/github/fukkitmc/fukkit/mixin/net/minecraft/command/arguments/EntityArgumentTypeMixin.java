@@ -19,7 +19,7 @@ public class EntityArgumentTypeMixin {
 
 	public EntitySelector fukkit$parse(StringReader stringReader, boolean overridePermissions) throws CommandSyntaxException {
 		EntitySelectorReader entitySelectorReader = new EntitySelectorReader(stringReader);
-		EntitySelector entitySelector = ((EntitySelectorReaderAccess)entitySelectorReader).parse(overridePermissions);
+		EntitySelector entitySelector = ((EntitySelectorReaderAccess) entitySelectorReader).parse(overridePermissions);
 		if (entitySelector.getLimit() > 1 && this.singleTarget) {
 			if (this.playersOnly) {
 				stringReader.setCursor(0);

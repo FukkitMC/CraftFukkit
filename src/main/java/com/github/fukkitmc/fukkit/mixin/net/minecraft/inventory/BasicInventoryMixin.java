@@ -16,10 +16,10 @@ import java.util.List;
 @Implements (@Interface (iface = InventoryAccess.class, prefix = "fukkit$"))
 @Mixin (BasicInventory.class)
 public class BasicInventoryMixin {
+	public List<HumanEntity> viewers = new ArrayList<>();
 	@Shadow
 	@Final
 	private DefaultedList<ItemStack> stackList;
-	public List<HumanEntity> viewers = new ArrayList<>();
 	private InventoryHolder holder;
 	private int maxStack = Constants.MAX_STACK;
 

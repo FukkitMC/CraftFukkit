@@ -22,22 +22,38 @@ public class CropBlockMixin extends PlantBlock {
 		super(settings);
 	}
 
-	@Redirect (method = "scheduledTick", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+	@Redirect (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                                        "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                        "Lnet/minecraft/block/BlockState;I)Z"))
 	private boolean fukkit_growEvent0(ServerWorld world, BlockPos pos, BlockState state, int flags) {
 		return CraftEventFactory.handleBlockGrowEvent(world, pos, state, flags);
 	}
 
-	@Redirect (method = "applyGrowth", at = @At (value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+	@Redirect (method = "applyGrowth", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/world/World;setBlockState" +
+	                                                      "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/block/BlockState;I)Z"))
 	private boolean fukkit_growEvent1(World world, BlockPos pos, BlockState state, int flags) {
 		return CraftEventFactory.handleBlockGrowEvent(world, pos, state, flags);
 	}
 
-	@Redirect(method = "onEntityCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/GameRules;getBoolean(Lnet/minecraft/world/GameRules$RuleKey;)Z"))
-	private boolean fukkit_ifHack(GameRules rules, GameRules.RuleKey<GameRules.BooleanRule> rule) { return true; /*mumfrey pls allow us to add conditions to ifs*/ }
+	@Redirect (method = "onEntityCollision", at = @At (value = "INVOKE",
+	                                                   target = "Lnet/minecraft/world/GameRules;getBoolean" +
+	                                                            "(Lnet/minecraft/world/GameRules$RuleKey;)Z"))
+	private boolean fukkit_ifHack(GameRules rules, GameRules.RuleKey<GameRules.BooleanRule> rule) { return true;
+	/*mumfrey pls allow us to add conditions to ifs*/ }
 
-	@Inject(method = "onEntityCollision", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;breakBlock(Lnet/minecraft/util/math/BlockPos;ZLnet/minecraft/entity/Entity;)Z"))
-	private void fukkit_entityChangeBlockEvent(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo ci) {
-		if(CraftEventFactory.callEntityChangeBlockEvent(entity, pos, Blocks.AIR.getDefaultState(), !world.getGameRules().getBoolean(GameRules.MOB_GRIEFING)).isCancelled()) {
+	@Inject (method = "onEntityCollision", at = @At (value = "INVOKE",
+	                                                 target = "Lnet/minecraft/world/World;breakBlock" +
+	                                                          "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                          "ZLnet/minecraft/entity/Entity;)Z"))
+	private void fukkit_entityChangeBlockEvent(BlockState state, World world, BlockPos pos, Entity entity,
+	                                           CallbackInfo ci) {
+		if (CraftEventFactory
+		    .callEntityChangeBlockEvent(entity, pos, Blocks.AIR.getDefaultState(), !world.getGameRules()
+		                                                                                 .getBoolean(GameRules.MOB_GRIEFING))
+		    .isCancelled()) {
 			super.onEntityCollision(state, world, pos, entity);
 			ci.cancel();
 		}

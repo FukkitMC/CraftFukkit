@@ -6,6 +6,8 @@ import java.util.UUID;
 
 public interface WorldSaveHandlerAccess {
 	CompoundTag getPlayerData(String uuid);
+
 	UUID getUUID();
+
 	File getPlayerDir();
 }

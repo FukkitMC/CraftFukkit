@@ -29,41 +29,66 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Random;
 
-@Mixin(TurtleEggBlock.class)
+@Mixin (TurtleEggBlock.class)
 public class TurtleEggBlockMixin {
 	@Shadow @Final public static IntProperty HATCH;
 
-	@Inject(method = "tryBreakEgg", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/TurtleEggBlock;breakEgg(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V"), cancellable = true)
+	@Inject (method = "tryBreakEgg", at = @At (value = "INVOKE",
+	                                           target = "Lnet/minecraft/block/TurtleEggBlock;breakEgg" +
+	                                                    "(Lnet/minecraft/world/World;" +
+	                                                    "Lnet/minecraft/util/math/BlockPos;" +
+	                                                    "Lnet/minecraft/block/BlockState;)V"),
+	         cancellable = true)
 	private void fukkit_interactEvent(World world, BlockPos pos, Entity entity, int inverseChance, CallbackInfo ci) {
 		Cancellable cancellable;
-		if(entity instanceof PlayerEntity) {
-			cancellable = CraftEventFactory.callPlayerInteractEvent((PlayerEntity) entity, Action.PHYSICAL, pos, null, null, null);
+		if (entity instanceof PlayerEntity) {
+			cancellable = CraftEventFactory
+			              .callPlayerInteractEvent((PlayerEntity) entity, Action.PHYSICAL, pos, null, null, null);
 		} else {
-			cancellable = new EntityInteractEvent(((EntityAccess<?>)entity).getBukkit(), CraftBlock.at(world, pos));
-			((WorldAccess)world).getBukkitServer().getPluginManager().callEvent((Event) cancellable);
+			cancellable = new EntityInteractEvent(((EntityAccess<?>) entity).getBukkit(), CraftBlock.at(world, pos));
+			((WorldAccess) world).getBukkitServer().getPluginManager().callEvent((Event) cancellable);
 		}
 
-		if(cancellable.isCancelled())
-			ci.cancel();
+		if (cancellable.isCancelled()) { ci.cancel(); }
 	}
 
-	@Inject(method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;playSound(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 0), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_growEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci, int i) {
-		if(!CraftEventFactory.handleBlockGrowEvent(world, pos, state.with(TurtleEggBlock.HATCH, i+1), 2))
+	@Inject (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/server/world/ServerWorld;playSound" +
+	                                                      "(Lnet/minecraft/entity/player/PlayerEntity;" +
+	                                                      "Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/sound/SoundEvent;" +
+	                                                      "Lnet/minecraft/sound/SoundCategory;FF)V",
+	                                             ordinal = 0), cancellable = true,
+	         locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_growEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci,
+	                              int i) {
+		if (!CraftEventFactory.handleBlockGrowEvent(world, pos, state.with(TurtleEggBlock.HATCH, i + 1), 2)) {
 			ci.cancel();
+		}
 	}
 
-	@Redirect(method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+	@Redirect (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                                        "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                        "Lnet/minecraft/block/BlockState;I)Z"))
 	private boolean fukkit_handledAbove(ServerWorld world, BlockPos pos, BlockState state, int flags) {return false;}
 
-	@Inject(method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;playSound(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 1), cancellable = true)
+	@Inject (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/server/world/ServerWorld;playSound" +
+	                                                      "(Lnet/minecraft/entity/player/PlayerEntity;" +
+	                                                      "Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/sound/SoundEvent;" +
+	                                                      "Lnet/minecraft/sound/SoundCategory;FF)V",
+	                                             ordinal = 1), cancellable = true)
 	private void fukkit_growEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci) {
-		if(!CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.AIR.getDefaultState()).isCancelled())
+		if (!CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.AIR.getDefaultState()).isCancelled()) {
 			ci.cancel();
+		}
 	}
 
-	@Redirect(method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;spawnEntity(Lnet/minecraft/entity/Entity;)Z"))
+	@Redirect (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/world/ServerWorld;spawnEntity(Lnet/minecraft/entity/Entity;)Z"))
 	private boolean fukkit_addReason(ServerWorld world, Entity entity) {
-		return ((ServerWorldAccess)world).addEntity(entity, CreatureSpawnEvent.SpawnReason.EGG);
+		return ((ServerWorldAccess) world).addEntity(entity, CreatureSpawnEvent.SpawnReason.EGG);
 	}
 }

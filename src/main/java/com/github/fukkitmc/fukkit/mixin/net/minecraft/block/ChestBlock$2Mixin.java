@@ -11,10 +11,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 import java.util.Optional;
 
-@Mixin(targets = "net.minecraft.block.ChestBlock$2")
+@Mixin (targets = "net.minecraft.block.ChestBlock$2")
 public class ChestBlock$2Mixin {
-	@Inject(method = "getFromBoth", at = @At("RETURN"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_customInventory(ChestBlockEntity leftChest, ChestBlockEntity rightChest, CallbackInfoReturnable<Optional<NameableContainerFactory>> cir, Inventory inventory) {
-		cir.setReturnValue(Optional.of(new BukkitChestDoubleInventory(leftChest, rightChest, (net.minecraft.inventory.DoubleInventory) inventory)));
+	@Inject (method = "getFromBoth", at = @At ("RETURN"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_customInventory(ChestBlockEntity leftChest, ChestBlockEntity rightChest,
+	                                    CallbackInfoReturnable<Optional<NameableContainerFactory>> cir,
+	                                    Inventory inventory) {
+		cir.setReturnValue(Optional
+		                   .of(new BukkitChestDoubleInventory(leftChest, rightChest,
+		                   (net.minecraft.inventory.DoubleInventory) inventory)));
 	}
 }

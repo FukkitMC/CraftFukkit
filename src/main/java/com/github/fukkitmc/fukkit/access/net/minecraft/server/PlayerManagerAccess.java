@@ -12,10 +12,17 @@ import org.bukkit.Location;
 
 public interface PlayerManagerAccess {
 	String disconnect(ServerPlayerEntity entity);
+
 	ServerPlayerEntity attemptLogin(ServerLoginNetworkHandler networkHandler, GameProfile profile, String host);
+
 	ServerPlayerEntity processLogin(GameProfile profile, ServerPlayerEntity entity);
-	ServerPlayerEntity moveToWorld(ServerPlayerEntity entityplayer, DimensionType dimensionmanager, boolean alive, Location location, boolean avoidSuffocation);
+
+	ServerPlayerEntity moveToWorld(ServerPlayerEntity entityplayer, DimensionType dimensionmanager, boolean alive,
+	                               Location location, boolean avoidSuffocation);
+
 	void sendAll(Packet<?> packet, PlayerEntity entity);
+
 	void sendAll(Packet packet, World world);
+
 	void sendMessage(Text[] lines);
 }

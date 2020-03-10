@@ -35,6 +35,9 @@ import java.util.Set;
 @Implements (@Interface (iface = ExplosionAccess.class, prefix = "fukkit$"))
 @Mixin (Explosion.class)
 public class ExplosionMixin {
+	// unsafe: probably safe, like 90%
+	private static final ThreadLocal<Float> YIELD = new ThreadLocal<>();
+	public boolean cancelled;
 	@Mutable
 	@Shadow
 	@Final
@@ -60,22 +63,30 @@ public class ExplosionMixin {
 	@Shadow
 	@Final
 	private Explosion.DestructionType blockDestructionType;
-	public boolean cancelled;
+	private boolean cont = false;
 
+	@Inject (method = "method_24023", at = @At ("HEAD"))
+	private static void fukkit_isEmpty(ObjectArrayList<Pair<ItemStack, BlockPos>> objectArrayList, ItemStack itemStack, BlockPos blockPos, CallbackInfo ci) {
+		if (itemStack.isEmpty()) { ci.cancel(); }
+	}
 
-
-	@Inject (method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;DDDFZLnet/minecraft/world/explosion/Explosion$DestructionType;)V", at = @At ("RETURN"))
-	private void fukkit_clampBad(World world, Entity entity, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType blockDestructionType, CallbackInfo ci) {
+	@Inject (
+	method = "<init>(Lnet/minecraft/world/World;Lnet/minecraft/entity/Entity;" +
+	         "DDDFZLnet/minecraft/world/explosion/Explosion$DestructionType;)V",
+	at = @At ("RETURN"))
+	private void fukkit_clampBad(World world, Entity entity, double x, double y, double z, float power,
+	                             boolean createFire, Explosion.DestructionType blockDestructionType, CallbackInfo ci) {
 		this.power = Math.max(power, 0.0f);
 	}
 
 	@Inject (method = "collectBlocksAndDamageEntities", at = @At ("HEAD"), cancellable = true)
 	private void fukkit_ignoreMicroExplosions(CallbackInfo ci) {
 		if (this.power < .1f) // not vanilla?
-			ci.cancel();
+		{ ci.cancel(); }
 	}
 
-	@Redirect (method = "collectBlocksAndDamageEntities", at = @At (value = "INVOKE", target = "Ljava/util/Set;add(Ljava/lang/Object;)Z"))
+	@Redirect (method = "collectBlocksAndDamageEntities",
+	           at = @At (value = "INVOKE", target = "Ljava/util/Set;add(Ljava/lang/Object;)Z"))
 	private boolean fukkit_noWrap(Set set, Object e) { // not vanilla?
 		BlockPos pos = (BlockPos) e;
 		if (pos.getY() < 256 && pos.getY() >= 0) {
@@ -84,44 +95,44 @@ public class ExplosionMixin {
 		return false;
 	}
 
-	private boolean cont = false;
-
-	@Redirect (method = "collectBlocksAndDamageEntities", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/Entity;damage(Lnet/minecraft/entity/damage/DamageSource;F)Z"))
+	@Redirect (method = "collectBlocksAndDamageEntities", at = @At (value = "INVOKE",
+	                                                                target = "Lnet/minecraft/entity/Entity;damage" +
+	                                                                         "(Lnet/minecraft/entity/damage" +
+	                                                                         "/DamageSource;F)Z"))
 	private boolean fukkit_damage(Entity entity, DamageSource source, float amount) {
 		CraftEventFactory.entityDamage = entity;
 		((EntityAccess) entity).setForceExplosionKnockback(false);
 		boolean wasDamaged = entity.damage(source, amount);
 		CraftEventFactory.entityDamage = null;
-		if (!wasDamaged && !(entity instanceof TntEntity || entity instanceof FallingBlockEntity) && !((EntityAccess) entity).shouldForceExplosionKnockback()) {
-			this.cont = true;
-		} else this.cont = false;
+		this.cont = !wasDamaged && !(entity instanceof TntEntity || entity instanceof FallingBlockEntity) && !((EntityAccess) entity)
+		                                                                                                      .shouldForceExplosionKnockback();
 		return false;
 	}
 
 	// hack to implement `continue;`, we redirect all the ifs and methods in the rest of the loop.
-	@Redirect (method = "collectBlocksAndDamageEntities", at = @At (value = "CONSTANT", args = "classValue=net.minecraft.entity.LivingEntity"))
+	@Redirect (method = "collectBlocksAndDamageEntities",
+	           at = @At (value = "CONSTANT", args = "classValue=net.minecraft.entity.LivingEntity"))
 	private boolean fukkit_continue(Object object, Class _class) {
-		if (this.cont) return false;
-		else return object instanceof LivingEntity;
+		if (this.cont) { return false; } else { return object instanceof LivingEntity; }
 	}
 
-	@Redirect (method = "collectBlocksAndDamageEntities", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/Entity;setVelocity(Lnet/minecraft/util/math/Vec3d;)V"))
+	@Redirect (method = "collectBlocksAndDamageEntities", at = @At (value = "INVOKE",
+	                                                                target = "Lnet/minecraft/entity/Entity;setVelocity" +
+	                                                                         "(Lnet/minecraft/util/math/Vec3d;)V"))
 	private void fukkit_continue(Entity entity, Vec3d velocity) {
 		if (!this.cont) {
 			entity.setVelocity(velocity);
 		}
 	}
 
-	@Redirect (method = "collectBlocksAndDamageEntities", at = @At (value = "CONSTANT", args = "classValue=net.minecraft.entity.player.PlayerEntity"))
+	@Redirect (method = "collectBlocksAndDamageEntities",
+	           at = @At (value = "CONSTANT", args = "classValue=net.minecraft.entity.player.PlayerEntity"))
 	private boolean fukkit_continue0(Object object, Class _class) {
-		if (this.cont) return false;
-		else return object instanceof PlayerEntity;
+		if (this.cont) { return false; } else { return object instanceof PlayerEntity; }
 	}
 
-	// unsafe: probably safe, like 90%
-	private static final ThreadLocal<Float> YIELD = new ThreadLocal<>();
-
-	@Inject (method = "affectWorld", at = @At (value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;", ordinal = 0))
+	@Inject (method = "affectWorld",
+	         at = @At (value = "INVOKE", target = "Ljava/util/List;iterator()Ljava/util/Iterator;", ordinal = 0))
 	private void fukkit_explodeEvent(boolean bl, CallbackInfo ci) {
 		CraftWorld craftWorld = ((WorldAccess) this.world).getBukkit();
 		org.bukkit.entity.Entity explosive = this.entity == null ? null : ((EntityAccess<?>) this.entity).getBukkit();
@@ -140,14 +151,16 @@ public class ExplosionMixin {
 		float yield;
 
 		if (explosive != null) {
-			EntityExplodeEvent event = new EntityExplodeEvent(explosive, location, blocks, this.blockDestructionType == Explosion.DestructionType.DESTROY ? 1.0f / this.power : 1.0f);
-			((WorldAccess)this.world).getBukkitServer().getPluginManager().callEvent(event);
+			EntityExplodeEvent event = new EntityExplodeEvent(explosive, location, blocks,
+			this.blockDestructionType == Explosion.DestructionType.DESTROY ? 1.0f / this.power : 1.0f);
+			((WorldAccess) this.world).getBukkitServer().getPluginManager().callEvent(event);
 			cancelled = event.isCancelled();
 			bukkit = event.blockList();
 			yield = event.getYield();
 		} else {
-			BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blocks, this.blockDestructionType == Explosion.DestructionType.DESTROY ? 1.0f / this.power : 1.0f);
-			((WorldAccess)this.world).getBukkitServer().getPluginManager().callEvent(event);
+			BlockExplodeEvent event = new BlockExplodeEvent(location.getBlock(), blocks,
+			this.blockDestructionType == Explosion.DestructionType.DESTROY ? 1.0f / this.power : 1.0f);
+			((WorldAccess) this.world).getBukkitServer().getPluginManager().callEvent(event);
 			cancelled = event.isCancelled();
 			bukkit = event.blockList();
 			yield = event.getYield();
@@ -160,7 +173,7 @@ public class ExplosionMixin {
 			this.affectedBlocks.add(coords);
 		}
 
-		if(cancelled) {
+		if (cancelled) {
 			this.cancelled = true;
 			ci.cancel();
 		}
@@ -168,18 +181,15 @@ public class ExplosionMixin {
 		YIELD.set(yield);
 	}
 
-	@Inject(method = "affectWorld", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;getDroppedStacks(Lnet/minecraft/loot/context/LootContext$Builder;)Ljava/util/List;", args = "log=true"), locals = LocalCapture.CAPTURE_FAILHARD)
+	@Inject (method = "affectWorld", at = @At (value = "INVOKE",
+	                                           target = "Lnet/minecraft/block/BlockState;getDroppedStacks" +
+	                                                    "(Lnet/minecraft/loot/context/LootContext$Builder;)" +
+	                                                    "Ljava/util/List;",
+	                                           args = "log=true"), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void fukkit_addYield(boolean bl, CallbackInfo ci) {
 		float yield = YIELD.get();
-		if(yield < 1.0f) {
+		if (yield < 1.0f) {
 		}
-	}
-
-
-	@Inject(method = "method_24023", at = @At("HEAD"))
-	private static void fukkit_isEmpty(ObjectArrayList<Pair<ItemStack, BlockPos>> objectArrayList, ItemStack itemStack, BlockPos blockPos, CallbackInfo ci) {
-		if(itemStack.isEmpty())
-			ci.cancel();
 	}
 
 	public boolean fukkit$wasCancelled() {

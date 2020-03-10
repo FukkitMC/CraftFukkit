@@ -20,27 +20,39 @@ public class CraftWorldBorderListener implements WorldBorderListener {
 
 	@Override
 	public void onSizeChange(WorldBorder worldBorder, double d) {
-		((PlayerManagerAccess) this.access.getBukkitServer().getHandle()).sendAll(new WorldBorderS2CPacket(worldBorder, WorldBorderS2CPacket.Type.SET_SIZE), ((WorldBorderAccess) worldBorder).getServerWorld());
+		((PlayerManagerAccess) this.access.getBukkitServer().getHandle())
+		.sendAll(new WorldBorderS2CPacket(worldBorder, WorldBorderS2CPacket.Type.SET_SIZE),
+		((WorldBorderAccess) worldBorder)
+		                                                                                    .getServerWorld());
 	}
 
 	@Override
 	public void onInterpolateSize(WorldBorder border, double fromSize, double toSize, long time) {
-		((PlayerManagerAccess) this.access.getBukkitServer().getHandle()).sendAll(new WorldBorderS2CPacket(border, WorldBorderS2CPacket.Type.LERP_SIZE), ((WorldBorderAccess) border).getServerWorld());
+		((PlayerManagerAccess) this.access.getBukkitServer().getHandle())
+		.sendAll(new WorldBorderS2CPacket(border, WorldBorderS2CPacket.Type.LERP_SIZE), ((WorldBorderAccess) border)
+		                                                                                .getServerWorld());
 	}
 
 	@Override
 	public void onCenterChanged(WorldBorder centerX, double centerZ, double d) {
-		((PlayerManagerAccess) this.access.getBukkitServer().getHandle()).sendAll(new WorldBorderS2CPacket(centerX, WorldBorderS2CPacket.Type.SET_CENTER), ((WorldBorderAccess) centerX).getServerWorld());
+		((PlayerManagerAccess) this.access.getBukkitServer().getHandle())
+		.sendAll(new WorldBorderS2CPacket(centerX, WorldBorderS2CPacket.Type.SET_CENTER), ((WorldBorderAccess) centerX)
+		                                                                                  .getServerWorld());
 	}
 
 	@Override
 	public void onWarningTimeChanged(WorldBorder warningTime, int i) {
-		((PlayerManagerAccess) this.access.getBukkitServer().getHandle()).sendAll(new WorldBorderS2CPacket(warningTime, WorldBorderS2CPacket.Type.SET_WARNING_TIME), ((WorldBorderAccess) warningTime).getServerWorld());
+		((PlayerManagerAccess) this.access.getBukkitServer().getHandle())
+		.sendAll(new WorldBorderS2CPacket(warningTime, WorldBorderS2CPacket.Type.SET_WARNING_TIME),
+		((WorldBorderAccess) warningTime)
+		                                                                                            .getServerWorld());
 	}
 
 	@Override
 	public void onWarningBlocksChanged(WorldBorder warningBlocks, int i) {
-		((PlayerManagerAccess) this.access.getBukkitServer().getHandle()).sendAll(new WorldBorderS2CPacket(warningBlocks, WorldBorderS2CPacket.Type.SET_WARNING_BLOCKS), ((WorldBorderAccess) warningBlocks).getServerWorld());
+		((PlayerManagerAccess) this.access.getBukkitServer().getHandle())
+		.sendAll(new WorldBorderS2CPacket(warningBlocks, WorldBorderS2CPacket.Type.SET_WARNING_BLOCKS), ((WorldBorderAccess) warningBlocks)
+		                                                                                                .getServerWorld());
 	}
 
 	@Override

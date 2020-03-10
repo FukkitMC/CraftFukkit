@@ -10,5 +10,6 @@ import net.minecraft.world.World;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
 public interface EntityTypeAccess<T extends Entity> {
-	T spawnCreature(World world, CompoundTag tag, Text text, PlayerEntity player, BlockPos pos, SpawnType type, boolean alignPosition, boolean invertY, CreatureSpawnEvent.SpawnReason spawnReason);
+	T spawnCreature(World world, CompoundTag tag, Text text, PlayerEntity player, BlockPos pos, SpawnType type,
+	                boolean alignPosition, boolean invertY, CreatureSpawnEvent.SpawnReason spawnReason);
 }

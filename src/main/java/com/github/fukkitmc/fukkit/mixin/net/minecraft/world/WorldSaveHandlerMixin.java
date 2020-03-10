@@ -20,18 +20,19 @@ import java.util.UUID;
 public class WorldSaveHandlerMixin {
 	@Shadow
 	@Final
-	private File playerDataDir;
+	private static final Logger LOGGER = null;
 	@Shadow
 	@Final
-	private static final Logger LOGGER = null;
+	private File playerDataDir;
 	@Shadow @Final private File worldDir;
 	private UUID uuid;
 
-	@Inject (method = "loadPlayerData", at = @At (value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;contains(Ljava/lang/String;I)Z"))
+	@Inject (method = "loadPlayerData",
+	         at = @At (value = "INVOKE", target = "Lnet/minecraft/nbt/CompoundTag;contains(Ljava/lang/String;I)Z"))
 	private void fukkit_updateOldPlayer(PlayerEntity playerEntity, CallbackInfoReturnable<CompoundTag> cir) {
 		CraftPlayer player = (CraftPlayer) ((EntityAccess) playerEntity).getBukkit();
 		long modified = new File(this.playerDataDir, playerEntity.getUuidAsString() + ".dat").lastModified();
-		if (modified < player.getFirstPlayed()) player.setFirstPlayed(modified);
+		if (modified < player.getFirstPlayed()) { player.setFirstPlayed(modified); }
 	}
 
 	public CompoundTag fukkit$getPlayerData(String uuid) {
@@ -47,7 +48,7 @@ public class WorldSaveHandlerMixin {
 	}
 
 	public UUID fukkit$getUUID() {
-		if (this.uuid != null) return this.uuid;
+		if (this.uuid != null) { return this.uuid; }
 		File file1 = new File(this.worldDir, "uid.dat");
 		if (file1.exists()) {
 			DataInputStream dis = null;

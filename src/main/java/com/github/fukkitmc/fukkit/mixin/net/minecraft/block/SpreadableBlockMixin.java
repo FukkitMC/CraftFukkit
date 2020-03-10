@@ -13,15 +13,24 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Random;
 
-@Mixin(SpreadableBlock.class)
+@Mixin (SpreadableBlock.class)
 public class SpreadableBlockMixin {
-	@Inject(method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z", ordinal = 0), cancellable = true)
+	@Inject (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                                      "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/block/BlockState;)Z",
+	                                             ordinal = 0), cancellable = true)
 	private void fukkit_fadeEvent(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci) {
-		if(CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.DIRT.getDefaultState()).isCancelled())
+		if (CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.DIRT.getDefaultState()).isCancelled()) {
 			ci.cancel();
+		}
 	}
 
-	@Redirect (method = "scheduledTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z", ordinal = 1))
+	@Redirect (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                                        "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                        "Lnet/minecraft/block/BlockState;)Z",
+	                                               ordinal = 1))
 	private boolean fukkit_fadeEvent2(ServerWorld world, BlockPos pos1, BlockState blockState, BlockState state, ServerWorld world1, BlockPos pos, Random random) {
 		return CraftEventFactory.handleBlockSpreadEvent(world, pos, pos1, blockState);
 	}

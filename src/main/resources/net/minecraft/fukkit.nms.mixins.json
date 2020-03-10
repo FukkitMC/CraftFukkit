@@ -21,6 +21,8 @@
     "entity.LivingEntityMixin",
     "fluid.BaseFluidMixin",
     "fluid.LavaFluidMixin",
+    "container.ContainerMixin",
+    "container.EnchantingTableContainerMixin",
     "inventory.BasicInventoryMixin",
     "inventory.CraftingInventoryMixin"
   ],

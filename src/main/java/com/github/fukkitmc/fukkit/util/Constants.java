@@ -6,10 +6,9 @@ import org.bukkit.TreeType;
  * static methods an
  */
 public class Constants {
+	public static final int MAX_STACK = 64;
 	// SaplingBlock#treeType
 	public static TreeType saplingBlockTreeType;
-	public static final int MAX_STACK = 64;
-
 	/**
 	 * @see com.github.fukkitmc.fukkit.mixin.net.minecraft.block.DispenserBlockMixin
 	 */

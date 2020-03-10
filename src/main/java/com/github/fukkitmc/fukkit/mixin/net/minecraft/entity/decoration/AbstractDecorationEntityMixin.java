@@ -1,7 +1,7 @@
 package com.github.fukkitmc.fukkit.mixin.net.minecraft.entity.decoration;
 
-import com.github.fukkitmc.fukkit.access.net.minecraft.world.WorldAccess;
 import com.github.fukkitmc.fukkit.access.CraftHandled;
+import com.github.fukkitmc.fukkit.access.net.minecraft.world.WorldAccess;
 import net.minecraft.block.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -28,7 +28,10 @@ public abstract class AbstractDecorationEntityMixin extends Entity {
 		super(type, world);
 	}
 
-	@Inject (method = "tick", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/decoration/AbstractDecorationEntity;remove()V"), cancellable = true)
+	@Inject (method = "tick", at = @At (value = "INVOKE",
+	                                    target = "Lnet/minecraft/entity/decoration/AbstractDecorationEntity;remove()" +
+	                                             "V"),
+	         cancellable = true)
 	public void breakEvent(CallbackInfo ci) {
 		Material material = this.world.getBlockState(new BlockPos(this)).getMaterial();
 		HangingBreakEvent.RemoveCause cause;
@@ -40,7 +43,8 @@ public abstract class AbstractDecorationEntityMixin extends Entity {
 			cause = HangingBreakEvent.RemoveCause.PHYSICS;
 		}
 
-		HangingBreakEvent event = new HangingBreakEvent((Hanging) ((CraftHandled<CraftEntity>) this).getBukkit(), cause);
+		HangingBreakEvent event = new HangingBreakEvent((Hanging) ((CraftHandled<CraftEntity>) this)
+		                                                          .getBukkit(), cause);
 		((WorldAccess) this.world).getBukkitServer().getPluginManager().callEvent(event);
 
 		if (this.removed || event.isCancelled()) {
@@ -48,15 +52,22 @@ public abstract class AbstractDecorationEntityMixin extends Entity {
 		}
 	}
 
-	@Inject (method = "damage", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/decoration/AbstractDecorationEntity;remove()V"), cancellable = true)
+	@Inject (method = "damage", at = @At (value = "INVOKE",
+	                                      target = "Lnet/minecraft/entity/decoration/AbstractDecorationEntity;remove()" +
+	                                               "V"),
+	         cancellable = true)
 	public void damageEvent(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
 		// CraftBukkit start - fire break events
 		Entity damager = (source instanceof ProjectileDamageSource) ? source.getSource() : source.getAttacker();
 		HangingBreakEvent event;
 		if (damager != null) {
-			event = new HangingBreakByEntityEvent((Hanging) ((CraftHandled<CraftEntity>) this).getBukkit(), ((CraftHandled<CraftEntity>) damager).getBukkit(), source.isExplosive() ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
+			event = new HangingBreakByEntityEvent((Hanging) ((CraftHandled<CraftEntity>) this)
+			                                                .getBukkit(), ((CraftHandled<CraftEntity>) damager)
+			                                                              .getBukkit(),
+			source.isExplosive() ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.ENTITY);
 		} else {
-			event = new HangingBreakEvent((Hanging) this, source.isExplosive() ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.DEFAULT);
+			event = new HangingBreakEvent((Hanging) this,
+			source.isExplosive() ? HangingBreakEvent.RemoveCause.EXPLOSION : HangingBreakEvent.RemoveCause.DEFAULT);
 		}
 
 		((WorldAccess) this.world).getBukkitServer().getPluginManager().callEvent(event);
@@ -66,11 +77,17 @@ public abstract class AbstractDecorationEntityMixin extends Entity {
 		}
 	}
 
-	@Inject (method = "move", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/decoration/AbstractDecorationEntity;remove()V"), cancellable = true)
+	@Inject (method = "move", at = @At (value = "INVOKE",
+	                                    target = "Lnet/minecraft/entity/decoration/AbstractDecorationEntity;remove()" +
+	                                             "V"),
+	         cancellable = true)
 	public void moveEvent(MovementType type, Vec3d movement, CallbackInfo ci) {
-		if (this.removed) return; // CraftBukkit
+		if (this.removed) {
+			return; // CraftBukkit
+		}
 
-		HangingBreakEvent event = new HangingBreakEvent((Hanging) ((CraftHandled<CraftEntity>) this).getBukkit(), HangingBreakEvent.RemoveCause.PHYSICS);
+		HangingBreakEvent event = new HangingBreakEvent((Hanging) ((CraftHandled<CraftEntity>) this)
+		                                                          .getBukkit(), HangingBreakEvent.RemoveCause.PHYSICS);
 		((WorldAccess) this.world).getBukkitServer().getPluginManager().callEvent(event);
 
 		if (this.removed || event.isCancelled()) {

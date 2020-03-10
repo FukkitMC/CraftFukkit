@@ -16,11 +16,12 @@ public abstract class TheEndDimensionMixin extends Dimension {
 
 	/**
 	 * handled by super
+	 *
 	 * @author HalfOf2
 	 */
 	@Override
 	@Overwrite
 	public DimensionType getType() {
-		return ((DimensionAccess)this).getType();
+		return ((DimensionAccess) this).getType();
 	}
 }

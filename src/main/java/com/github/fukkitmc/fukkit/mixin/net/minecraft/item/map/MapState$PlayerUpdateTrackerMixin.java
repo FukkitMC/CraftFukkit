@@ -22,27 +22,32 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
-@Mixin(MapState.PlayerUpdateTracker.class)
+@Mixin (MapState.PlayerUpdateTracker.class)
 public class MapState$PlayerUpdateTrackerMixin {
+	@Shadow @Final public PlayerEntity player;
 	// todo yes
 	@SuppressWarnings ("ShadowTarget")
 	@Shadow private /*synthetic (this)*/ MapState field_132;
-
-	@Shadow @Final public PlayerEntity player;
-
 	private Collection<MapIcon> icons;
-	@Inject(method = "getPacket", at = @At("HEAD"))
+
+	@Inject (method = "getPacket", at = @At ("HEAD"))
 	private void fukkit_renderData(ItemStack stack, CallbackInfoReturnable<Packet<?>> cir) {
-		RenderData render = ((MapStateAccess) this.field_132).getMapView().render((CraftPlayer) ((PlayerEntityAccess)this.player).getBukkit());
+		RenderData render = ((MapStateAccess) this.field_132).getMapView()
+		                                                     .render((CraftPlayer) ((PlayerEntityAccess) this.player)
+		                                                                           .getBukkit());
 		this.icons = new ArrayList<>();
 		for (MapCursor cursor : render.cursors) {
-			if(cursor.isVisible()) {
-				this.icons.add(new MapIcon(MapIcon.Type.byId(cursor.getRawType()), cursor.getX(), cursor.getY(), cursor.getDirection(), CraftChatMessage.fromStringOrNull(cursor.getCaption())));
+			if (cursor.isVisible()) {
+				this.icons.add(new MapIcon(MapIcon.Type.byId(cursor.getRawType()), cursor.getX(), cursor.getY(), cursor
+				                                                                                                 .getDirection(), CraftChatMessage
+				                                                                                                                  .fromStringOrNull(cursor
+				                                                                                                                                    .getCaption())));
 			}
 		}
 	}
 
-	@Redirect(method = "getPacket", at = @At(value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"))
+	@Redirect (method = "getPacket",
+	           at = @At (value = "INVOKE", target = "Ljava/util/Map;values()Ljava/util/Collection;"))
 	private Collection<?> fukkit_icons(Map<?, ?> map) {
 		Collection<MapIcon> temp = this.icons;
 		this.icons = null;

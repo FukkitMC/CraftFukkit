@@ -11,12 +11,13 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(FluidBlock.class)
+@Mixin (FluidBlock.class)
 public abstract class FluidBlockMixin {
-	@Shadow protected abstract void playExtinguishSound(IWorld world, BlockPos pos);
-
 	// two birds 1 stone
-	@Redirect(method = "receiveNeighborFluids", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)Z"))
+	@Redirect (method = "receiveNeighborFluids", at = @At (value = "INVOKE",
+	                                                       target = "Lnet/minecraft/world/World;setBlockState" +
+	                                                                "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                                "Lnet/minecraft/block/BlockState;)Z"))
 	private boolean fukkit_formEvent(World world, BlockPos pos, BlockState blockState) {
 		if (CraftEventFactory.handleBlockFormEvent(world, pos, blockState)) {
 			this.playExtinguishSound(world, pos);
@@ -24,8 +25,13 @@ public abstract class FluidBlockMixin {
 		return false;
 	}
 
+	@Shadow protected abstract void playExtinguishSound(IWorld world, BlockPos pos);
+
 	// two birds 1 stone
-	@Redirect(method = "receiveNeighborFluids", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/FluidBlock;playExtinguishSound(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;)V"))
+	@Redirect (method = "receiveNeighborFluids", at = @At (value = "INVOKE",
+	                                                       target = "Lnet/minecraft/block/FluidBlock;" +
+	                                                                "playExtinguishSound(Lnet/minecraft/world/IWorld;" +
+	                                                                "Lnet/minecraft/util/math/BlockPos;)V"))
 	private void fukkit_voidCall(FluidBlock block, IWorld world, BlockPos pos) {
 	}
 }

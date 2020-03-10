@@ -7,8 +7,12 @@ import org.bukkit.Chunk;
 
 public interface WorldChunkAccess extends CraftHandled<Chunk> {
 	boolean getMustNotSave();
+
 	void setMustNotSave(boolean save);
+
 	boolean getNeedsDecoration();
+
 	void setNeedsDecoration(boolean decoration);
+
 	BlockState setType(BlockPos pos, BlockState state, boolean flag, boolean doPlace);
 }

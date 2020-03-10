@@ -22,9 +22,13 @@ import java.util.Map;
 
 @Mixin (BaseFluid.class)
 public abstract class BaseFluidMixin {
-	@Shadow protected abstract void flow(IWorld world, BlockPos pos, BlockState state, Direction direction, FluidState fluidState);
-
-	@Inject (method = "tryFlow", at = @At (value = "INVOKE", target = "Lnet/minecraft/fluid/BaseFluid;flow(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/Direction;Lnet/minecraft/fluid/FluidState;)V"), cancellable = true)
+	@Inject (method = "tryFlow", at = @At (value = "INVOKE",
+	                                       target = "Lnet/minecraft/fluid/BaseFluid;flow(Lnet/minecraft/world/IWorld;" +
+	                                                "Lnet/minecraft/util/math/BlockPos;" +
+	                                                "Lnet/minecraft/block/BlockState;" +
+	                                                "Lnet/minecraft/util/math/Direction;" +
+	                                                "Lnet/minecraft/fluid/FluidState;)V"),
+	         cancellable = true)
 	public void blockFromToEvent(IWorld world, BlockPos fluidPos, FluidState state, CallbackInfo ci) {
 		org.bukkit.block.Block source = CraftBlock.at(world, fluidPos);
 		BlockFromToEvent event = new BlockFromToEvent(source, BlockFace.DOWN);
@@ -35,17 +39,36 @@ public abstract class BaseFluidMixin {
 		}
 	}
 
-	@Inject (method = "method_15744(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/fluid/FluidState;Lnet/minecraft/block/BlockState;)V", at = @At (value = "INVOKE", target = "Lnet/minecraft/fluid/BaseFluid;flow(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/Direction;Lnet/minecraft/fluid/FluidState;)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	public void fukkit_fromToEvent(IWorld iWorld, BlockPos blockPos, FluidState fluidState, BlockState blockState, CallbackInfo ci, Map map, Iterator var7, Map.Entry entry, Direction direction, FluidState fluidState2, BlockPos blockPos2, BlockState blockState2) {
+	@Inject (
+	method = "method_15744(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;" +
+	         "Lnet/minecraft/fluid/FluidState;Lnet/minecraft/block/BlockState;)V",
+	at = @At (value = "INVOKE",
+	          target = "Lnet/minecraft/fluid/BaseFluid;flow(Lnet/minecraft/world/IWorld;" +
+	                   "Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;" +
+	                   "Lnet/minecraft/util/math/Direction;Lnet/minecraft/fluid/FluidState;)V"),
+	locals = LocalCapture.CAPTURE_FAILHARD)
+	public void fukkit_fromToEvent(IWorld iWorld, BlockPos blockPos, FluidState fluidState, BlockState blockState,
+	                               CallbackInfo ci, Map map, Iterator var7, Map.Entry entry, Direction direction,
+	                               FluidState fluidState2, BlockPos blockPos2, BlockState blockState2) {
 		org.bukkit.block.Block source = CraftBlock.at(iWorld, blockPos);
 		BlockFromToEvent event = new BlockFromToEvent(source, CraftBlock.notchToBlockFace(direction));
-		((WorldAccess)iWorld.getWorld()).getBukkitServer().getPluginManager().callEvent(event);
+		((WorldAccess) iWorld.getWorld()).getBukkitServer().getPluginManager().callEvent(event);
 		if (!event.isCancelled()) {
 			this.flow(iWorld, blockPos2, blockState2, direction, fluidState2);
 		}
 	}
 
-	@Redirect (method = "method_15744(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/fluid/FluidState;Lnet/minecraft/block/BlockState;)V", at = @At (value = "INVOKE", target = "Lnet/minecraft/fluid/BaseFluid;flow(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/Direction;Lnet/minecraft/fluid/FluidState;)V"))
+	@Shadow
+	protected abstract void flow(IWorld world, BlockPos pos, BlockState state, Direction direction,
+	                             FluidState fluidState);
+
+	@Redirect (
+	method = "method_15744(Lnet/minecraft/world/IWorld;Lnet/minecraft/util/math/BlockPos;" +
+	         "Lnet/minecraft/fluid/FluidState;Lnet/minecraft/block/BlockState;)V",
+	at = @At (value = "INVOKE",
+	          target = "Lnet/minecraft/fluid/BaseFluid;flow(Lnet/minecraft/world/IWorld;" +
+	                   "Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;" +
+	                   "Lnet/minecraft/util/math/Direction;Lnet/minecraft/fluid/FluidState;)V"))
 	public void fukkit_voidUnmapped(BaseFluid fluid, IWorld world, BlockPos pos, BlockState state, Direction direction, FluidState fluidState) {
 
 	}

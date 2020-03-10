@@ -18,19 +18,30 @@ import java.util.Random;
 
 @Mixin (SaplingBlock.class)
 public class SaplingBlockMixin {
-	@Inject (method = "scheduledTick", at = @At (value = "INVOKE", target = "Lnet/minecraft/block/SaplingBlock;generate(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Ljava/util/Random;)V"))
+	@Inject (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/block/SaplingBlock;generate" +
+	                                                      "(Lnet/minecraft/server/world/ServerWorld;" +
+	                                                      "Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/block/BlockState;Ljava/util/Random;)V"))
 	private void fukkit_captureGen(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci) {
 		((WorldAccess) world).setCaptureTreeGen(true);
 	}
 
-	@Inject (method = "scheduledTick", at = @At (value = "INVOKE", target = "Lnet/minecraft/block/SaplingBlock;generate(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Ljava/util/Random;)V", shift = At.Shift.AFTER))
-	private void fukkit_captureGen2(BlockState state, ServerWorld world, BlockPos pos, Random random, CallbackInfo ci) {
+	@Inject (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                             target = "Lnet/minecraft/block/SaplingBlock;generate" +
+	                                                      "(Lnet/minecraft/server/world/ServerWorld;" +
+	                                                      "Lnet/minecraft/util/math/BlockPos;" +
+	                                                      "Lnet/minecraft/block/BlockState;Ljava/util/Random;)V",
+	                                             shift = At.Shift.AFTER))
+	private void fukkit_captureGen2(BlockState state, ServerWorld world, BlockPos pos, Random random,
+	                                CallbackInfo ci) {
 		if (!((WorldAccess) world).getCapturedStates().isEmpty()) {
 			TreeType treeType = Constants.saplingBlockTreeType;
 			Constants.saplingBlockTreeType = null;
-			Location location = new Location(((WorldAccess)world).getBukkit(), pos.getX(), pos.getY(), pos.getZ());
-			List<org.bukkit.block.BlockState> blocks = (List<org.bukkit.block.BlockState>) ((WorldAccess)world).getCapturedStates().clone();
-			((WorldAccess)world).getCapturedStates().clear();
+			Location location = new Location(((WorldAccess) world).getBukkit(), pos.getX(), pos.getY(), pos.getZ());
+			List<org.bukkit.block.BlockState> blocks = (List<org.bukkit.block.BlockState>) ((WorldAccess) world)
+			                                                                               .getCapturedStates().clone();
+			((WorldAccess) world).getCapturedStates().clear();
 			StructureGrowEvent event = null;
 			if (treeType != null) {
 				event = new StructureGrowEvent(location, treeType, false, null, blocks);

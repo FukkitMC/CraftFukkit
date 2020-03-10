@@ -5,7 +5,10 @@ import net.minecraft.server.MinecraftServer;
 public interface ServerLoginNetworkHandlerAccess {
 	@Deprecated
 	void disconnect(String text);
+
 	MinecraftServer getServer();
+
 	String getHostName();
+
 	void setHostName(String name);
 }

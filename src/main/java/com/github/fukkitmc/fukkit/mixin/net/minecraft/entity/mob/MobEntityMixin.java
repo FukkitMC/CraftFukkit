@@ -7,8 +7,8 @@ import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(MobEntity.class)
-@Implements(@Interface(iface = MobEntityAccess.class, prefix = "fukkit$"))
+@Mixin (MobEntity.class)
+@Implements (@Interface (iface = MobEntityAccess.class, prefix = "fukkit$"))
 public class MobEntityMixin {
 	// TODO skeleton impl
 	@Shadow private boolean persistent;

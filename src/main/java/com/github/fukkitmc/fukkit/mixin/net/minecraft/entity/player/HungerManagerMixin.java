@@ -25,9 +25,6 @@ import java.util.Objects;
 public abstract class HungerManagerMixin {
 	@Shadow
 	private int foodLevel;
-
-	@Shadow public abstract void add(int food, float f);
-
 	@Shadow private float foodSaturationLevel;
 	private PlayerEntity player;
 
@@ -35,10 +32,14 @@ public abstract class HungerManagerMixin {
 		this.player = Objects.requireNonNull(entity);
 	}
 
-	@Redirect (method = "eat", at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;add(IF)V"))
-	private void fukkit_foodChangeEvent(HungerManager manager, int hunger, float saturation, Item item, ItemStack itemStack) {
+	@Redirect (method = "eat",
+	           at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;add(IF)V"))
+	private void fukkit_foodChangeEvent(HungerManager manager, int hunger, float saturation, Item item,
+	                                    ItemStack itemStack) {
 		int old = this.foodLevel;
-		org.bukkit.event.entity.FoodLevelChangeEvent event = org.bukkit.craftbukkit.event.CraftEventFactory.callFoodLevelChangeEvent(this.player, hunger + old, itemStack);
+		org.bukkit.event.entity.FoodLevelChangeEvent event = org.bukkit.craftbukkit.event.CraftEventFactory
+		                                                     .callFoodLevelChangeEvent(this.player, hunger + old,
+		                                                     itemStack);
 
 		if (!event.isCancelled()) {
 			this.add(event.getFoodLevel() - old, saturation);
@@ -46,21 +47,28 @@ public abstract class HungerManagerMixin {
 		((ServerPlayerEntityAccess) this.player).getBukkit().sendHealthUpdate();
 	}
 
-	@Redirect(method = "update", at = @At(value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
+	@Shadow public abstract void add(int food, float f);
+
+	@Redirect (method = "update", at = @At (value = "INVOKE", target = "Ljava/lang/Math;max(II)I"))
 	private int fukkit_foodLevelChangeEvent(int foodLevelMinusOne, int zero) {
-		FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(this.player, Math.max(foodLevelMinusOne, 0));
+		FoodLevelChangeEvent event = CraftEventFactory
+		                             .callFoodLevelChangeEvent(this.player, Math.max(foodLevelMinusOne, 0));
 		int level;
-		if(!event.isCancelled()) {
+		if (!event.isCancelled()) {
 			level = event.getFoodLevel();
 		} else {
 			level = this.foodLevel;
 		}
-		((ServerPlayerEntity)this.player).networkHandler.sendPacket(new HealthUpdateS2CPacket(((ServerPlayerEntityAccess) this.player).getBukkit().getScaledHealth(), level, this.foodSaturationLevel));
+		((ServerPlayerEntity) this.player).networkHandler
+		.sendPacket(new HealthUpdateS2CPacket(((ServerPlayerEntityAccess) this.player).getBukkit()
+		                                                                              .getScaledHealth(), level,
+		this.foodSaturationLevel));
 		return level;
 	}
 
-	@Redirect(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;heal(F)V"))
+	@Redirect (method = "update",
+	           at = @At (value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;heal(F)V"))
 	private void fukkit_healEvent(PlayerEntity entity, float amount) {
-		((PlayerEntityAccess<?>)entity).heal(amount, EntityRegainHealthEvent.RegainReason.SATIATED);
+		((PlayerEntityAccess<?>) entity).heal(amount, EntityRegainHealthEvent.RegainReason.SATIATED);
 	}
 }

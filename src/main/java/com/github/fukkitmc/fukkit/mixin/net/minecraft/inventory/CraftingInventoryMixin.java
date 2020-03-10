@@ -21,10 +21,10 @@ import java.util.List;
 @Implements (@Interface (iface = CraftingInventoryAccess.class, prefix = "fukkit$"))
 @Mixin (CraftingInventory.class)
 public class CraftingInventoryMixin {
+	public List<HumanEntity> viewers = new ArrayList<>();
 	@Shadow
 	@Final
 	private DefaultedList<ItemStack> stacks;
-	public List<HumanEntity> viewers = new ArrayList<>();
 	private Player holder;
 	private Recipe<?> recipe;
 	private Inventory resultInventory;
@@ -51,8 +51,9 @@ public class CraftingInventoryMixin {
 	}
 
 	public void fukkit$setOwner(InventoryHolder holder) {
-		if (holder instanceof Player) this.holder = (Player) holder;
-		else throw new IllegalArgumentException(holder + " is not a player!");
+		if (holder instanceof Player) { this.holder = (Player) holder; } else {
+			throw new IllegalArgumentException(holder + " is not a player!");
+		}
 	}
 
 	public void fukkit$setMaxStackSize(int size) {
@@ -63,11 +64,8 @@ public class CraftingInventoryMixin {
 	public Location fukkit$getLocation() {
 		return null;
 		// todo fix
-		//return this.container instanceof CraftingTableContainer ? ((BlockContextAccess)((HasBlockContextAccess)this.container).getContext()).getLocation():holder.getLocation();
-	}
-
-	public InventoryType fukkit$getInvType() {
-		return this.stacks.size() == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
+		//return this.container instanceof CraftingTableContainer ? ((BlockContextAccess)((HasBlockContextAccess)this
+		// .container).getContext()).getLocation():holder.getLocation();
 	}
 
 	public Recipe<?> fukkit$getCurrentRecipe() {
@@ -78,11 +76,15 @@ public class CraftingInventoryMixin {
 		this.recipe = recipe;
 	}
 
-	public void fukkit$setResultInventory(Inventory inventory) {
-		this.resultInventory = inventory;
+	public InventoryType fukkit$getInvType() {
+		return this.stacks.size() == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
 	}
 
 	public Inventory fukkit$getResultInventory() {
 		return this.resultInventory;
+	}
+
+	public void fukkit$setResultInventory(Inventory inventory) {
+		this.resultInventory = inventory;
 	}
 }

@@ -25,7 +25,17 @@ public class FarmlandBlockMixin extends Block {
 		super(settings);
 	}
 
-	@Redirect (method = "scheduledTick", at = @At (value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z"))
+	@Inject (method = "setToDirt", at = @At ("HEAD"), cancellable = true)
+	private static void fukkit_callFadeEvent(BlockState state, World world, BlockPos pos, CallbackInfo ci) {
+		if (CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.DIRT.getDefaultState()).isCancelled()) {
+			ci.cancel();
+		}
+	}
+
+	@Redirect (method = "scheduledTick", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/server/world/ServerWorld;setBlockState" +
+	                                                        "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                        "Lnet/minecraft/block/BlockState;I)Z"))
 	private boolean fukkit_moistEvent(ServerWorld world, BlockPos pos, BlockState state, int flags) {
 		return CraftEventFactory.handleMoistureChangeEvent(world, pos, state, flags);
 	}
@@ -35,14 +45,24 @@ public class FarmlandBlockMixin extends Block {
 		super.onLandedUpon(world, pos, entity, distance);
 	}
 
-	@Inject (method = "onLandedUpon", at = @At (value = "INVOKE", target = "Lnet/minecraft/block/FarmlandBlock;setToDirt(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"), cancellable = true)
+	@Inject (method = "onLandedUpon", at = @At (value = "INVOKE",
+	                                            target = "Lnet/minecraft/block/FarmlandBlock;setToDirt" +
+	                                                     "(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;" +
+	                                                     "Lnet/minecraft/util/math/BlockPos;)V"),
+	         cancellable = true)
 	private void fukkit_interactEvent(World world, BlockPos pos, Entity entity, float distance, CallbackInfo ci) {
 		org.bukkit.event.Cancellable cancellable;
 		if (entity instanceof PlayerEntity) {
-			cancellable = CraftEventFactory.callPlayerInteractEvent((PlayerEntity) entity, org.bukkit.event.block.Action.PHYSICAL, pos, null, null, null);
+			cancellable = CraftEventFactory
+			              .callPlayerInteractEvent((PlayerEntity) entity, org.bukkit.event.block.Action.PHYSICAL, pos,
+			              null, null, null);
 		} else {
-			cancellable = new EntityInteractEvent(((EntityAccess<?>)entity).getBukkit(), ((WorldAccess)world).getBukkit().getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
-			((WorldAccess)world).getBukkitServer().getPluginManager().callEvent((EntityInteractEvent) cancellable);
+			cancellable = new EntityInteractEvent(((EntityAccess<?>) entity).getBukkit(), ((WorldAccess) world)
+			                                                                              .getBukkit()
+			                                                                              .getBlockAt(pos.getX(), pos
+			                                                                                                      .getY(), pos
+			                                                                                                               .getZ()));
+			((WorldAccess) world).getBukkitServer().getPluginManager().callEvent((EntityInteractEvent) cancellable);
 		}
 
 		if (cancellable.isCancelled()) {
@@ -53,11 +73,5 @@ public class FarmlandBlockMixin extends Block {
 		if (CraftEventFactory.callEntityChangeBlockEvent(entity, pos, Blocks.DIRT.getDefaultState()).isCancelled()) {
 			ci.cancel();
 		}
-	}
-
-	@Inject(method = "setToDirt", at = @At("HEAD"), cancellable = true)
-	private static void fukkit_callFadeEvent(BlockState state, World world, BlockPos pos, CallbackInfo ci) {
-		if(CraftEventFactory.callBlockFadeEvent(world, pos, Blocks.DIRT.getDefaultState()).isCancelled())
-			ci.cancel();
 	}
 }

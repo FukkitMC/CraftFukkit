@@ -10,16 +10,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
-@Implements(@Interface(iface = WorldBorderAccess.class, prefix = "fukkit$"))
-@Mixin(WorldBorder.class)
+@Implements (@Interface (iface = WorldBorderAccess.class, prefix = "fukkit$"))
+@Mixin (WorldBorder.class)
 public abstract class WorldBorderMixin {
-	@Shadow @Final private List<WorldBorderListener> listeners;
 	public ServerWorld world;
+	@Shadow @Final private List<WorldBorderListener> listeners;
 
-	@Inject (method = "addListener(Lnet/minecraft/world/border/WorldBorderListener;)V", at = @At("HEAD"), cancellable = true)
+	@Inject (method = "addListener(Lnet/minecraft/world/border/WorldBorderListener;)V", at = @At ("HEAD"),
+	         cancellable = true)
 	public void addListener(WorldBorderListener listener, CallbackInfo ci) {
-		if(this.listeners.contains(listener))
-			ci.cancel();
+		if (this.listeners.contains(listener)) { ci.cancel(); }
 	}
 
 	public ServerWorld fukkit$getServerWorld() {

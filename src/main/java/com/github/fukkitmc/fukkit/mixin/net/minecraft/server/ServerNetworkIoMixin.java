@@ -10,12 +10,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import java.util.List;
 
-@Implements(@Interface(iface = ServerNetworkIoAccess.class, prefix = "fukkit$"))
-@Mixin(ServerNetworkIo.class)
+@Implements (@Interface (iface = ServerNetworkIoAccess.class, prefix = "fukkit$"))
+@Mixin (ServerNetworkIo.class)
 public abstract class ServerNetworkIoMixin {
 	@Shadow @Final private List<ChannelFuture> channels;
 
-	@Redirect(method = "bind", at = @At(value = "INVOKE", target = "Lio/netty/bootstrap/ServerBootstrap;bind()Lio/netty/channel/ChannelFuture;", remap = false))
+	@Redirect (method = "bind", at = @At (value = "INVOKE",
+	                                      target = "Lio/netty/bootstrap/ServerBootstrap;bind()" +
+	                                               "Lio/netty/channel/ChannelFuture;",
+	                                      remap = false))
 	public ChannelFuture bind(ServerBootstrap bootstrap) {
 		return bootstrap.option(ChannelOption.AUTO_READ, false).bind();
 	}

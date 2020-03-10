@@ -29,59 +29,24 @@ public abstract class EntitySelectorReaderMixin {
 
 	@Shadow
 	private BiFunction<SuggestionsBuilder, Consumer<SuggestionsBuilder>, CompletableFuture<Suggestions>> suggestionProvider;
-
-	@Shadow
-	protected abstract CompletableFuture<Suggestions> suggestSelectorRest(SuggestionsBuilder builder, Consumer<SuggestionsBuilder> consumer);
-
 	@Shadow
 	@Final
 	private StringReader reader;
-
 	@Shadow
 	private int limit;
-
 	@Shadow
 	private boolean includesNonPlayers;
-
 	@Shadow
 	private BiConsumer<Vec3d, List<? extends Entity>> sorter;
-
-	@Shadow
-	public abstract void setEntityType(EntityType<?> entityType);
-
 	@Shadow
 	private boolean senderOnly;
-
 	@Shadow
 	private Predicate<Entity> predicate;
-
-	@Shadow
-	protected abstract CompletableFuture<Suggestions> suggestOpen(SuggestionsBuilder builder, Consumer<SuggestionsBuilder> consumer);
-
-	@Shadow
-	protected abstract CompletableFuture<Suggestions> suggestOptionOrEnd(SuggestionsBuilder builder, Consumer<SuggestionsBuilder> consumer);
-
-	@Shadow
-	protected abstract void readArguments() throws CommandSyntaxException;
-
 	@Shadow
 	private int startCursor;
-
-	@Shadow
-	protected abstract CompletableFuture<Suggestions> suggestSelector(SuggestionsBuilder builder, Consumer<SuggestionsBuilder> consumer);
-
 	@Shadow
 	@Final
 	private boolean atAllowed;
-
-	@Shadow
-	protected abstract void readRegular() throws CommandSyntaxException;
-
-	@Shadow
-	protected abstract void buildPredicate();
-
-	@Shadow
-	public abstract EntitySelector build();
 
 	public EntitySelector fukkit$parse(boolean overridePermissions) throws CommandSyntaxException {
 		this.startCursor = this.reader.getCursor();
@@ -100,6 +65,10 @@ public abstract class EntitySelectorReaderMixin {
 		this.buildPredicate();
 		return this.build();
 	}
+
+	@Shadow
+	protected abstract CompletableFuture<Suggestions> suggestSelector(SuggestionsBuilder builder,
+	                                                                  Consumer<SuggestionsBuilder> consumer);
 
 	@Unique
 	public void parseSelector(boolean overridePermissions) throws CommandSyntaxException {
@@ -132,7 +101,8 @@ public abstract class EntitySelectorReaderMixin {
 			} else {
 				if (c != 'e') {
 					this.reader.setCursor(i);
-					throw EntitySelectorReader.UNKNOWN_SELECTOR_EXCEPTION.createWithContext(this.reader, '@' + String.valueOf(c));
+					throw EntitySelectorReader.UNKNOWN_SELECTOR_EXCEPTION
+					      .createWithContext(this.reader, '@' + String.valueOf(c));
 				}
 
 				this.limit = Integer.MAX_VALUE;
@@ -149,4 +119,31 @@ public abstract class EntitySelectorReaderMixin {
 			}
 		}
 	}
+
+	@Shadow
+	protected abstract void readRegular() throws CommandSyntaxException;
+
+	@Shadow
+	protected abstract void buildPredicate();
+
+	@Shadow
+	public abstract EntitySelector build();
+
+	@Shadow
+	protected abstract CompletableFuture<Suggestions> suggestSelectorRest(SuggestionsBuilder builder,
+	                                                                      Consumer<SuggestionsBuilder> consumer);
+
+	@Shadow
+	public abstract void setEntityType(EntityType<?> entityType);
+
+	@Shadow
+	protected abstract CompletableFuture<Suggestions> suggestOpen(SuggestionsBuilder builder,
+	                                                              Consumer<SuggestionsBuilder> consumer);
+
+	@Shadow
+	protected abstract CompletableFuture<Suggestions> suggestOptionOrEnd(SuggestionsBuilder builder,
+	                                                                     Consumer<SuggestionsBuilder> consumer);
+
+	@Shadow
+	protected abstract void readArguments() throws CommandSyntaxException;
 }

@@ -8,12 +8,14 @@ import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.libs.jline.console.ConsoleReader;
 
-@BukkitBridge(MinecraftServer.class)
+@BukkitBridge (MinecraftServer.class)
 public interface MinecraftServerAccess extends CraftHandled<CraftServer> {
-	@BukkitAccessor("console")
+	@BukkitAccessor ("console")
 	ConsoleCommandSender getConsoleCommandSender();
-	@BukkitAccessor("console")
+
+	@BukkitAccessor ("console")
 	void setConsoleCommandSender(ConsoleCommandSender sender);
-	@BukkitAccessor("reader")
+
+	@BukkitAccessor ("reader")
 	ConsoleReader getReader();
 }

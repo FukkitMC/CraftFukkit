@@ -2,20 +2,13 @@ package com.github.fukkitmc.fukkit.access.net.minecraft.container;
 
 import com.github.fukkitmc.fukkit.access.net.minecraft.world.WorldAccess;
 import net.minecraft.util.math.BlockPos;
-import org.bukkit.World;
+import net.minecraft.world.World;
+import org.bukkit.Location;
 
 public interface BlockContextAccess {
-	default World getWorld() {
-		throw new UnsupportedOperationException("not suported");
-	}
+	World getWorld();
 
-	default BlockPos getPosition() {
-		throw new UnsupportedOperationException("not suported");
-	}
+	BlockPos getPosition();
 
-	default org.bukkit.Location getLocation() {
-		BlockPos pos = this.getPosition();
-		return new org.bukkit.Location(((WorldAccess) this.getWorld()).getBukkit(), pos.getX(), pos.getY(), pos.getZ());
-	}
-
+	Location getLocation();
 }

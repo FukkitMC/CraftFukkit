@@ -9,14 +9,14 @@ import org.bukkit.craftbukkit.event.CraftEventFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(IceBlock.class)
+@Mixin (IceBlock.class)
 public class IceBlockMixin {
-	@Inject (method = "melt", at = @At(value = "HEAD"), cancellable = true)
+	@Inject (method = "melt", at = @At (value = "HEAD"), cancellable = true)
 	private void fukkit_fadeEvent(BlockState state, World world, BlockPos pos, CallbackInfo ci) {
-		if(CraftEventFactory.callBlockFadeEvent(world, pos, world.dimension.doesWaterVaporize() ? Blocks.AIR.getDefaultState() : Blocks.WATER.getDefaultState()).isCancelled())
-			ci.cancel();
+		if (CraftEventFactory.callBlockFadeEvent(world, pos,
+		world.dimension.doesWaterVaporize() ? Blocks.AIR.getDefaultState() : Blocks.WATER.getDefaultState())
+		                     .isCancelled()) { ci.cancel(); }
 	}
 }

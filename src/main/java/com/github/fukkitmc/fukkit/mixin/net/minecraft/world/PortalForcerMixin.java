@@ -32,11 +32,16 @@ public class PortalForcerMixin {
 
 	@Shadow @Final private Random random;
 
-	public BlockPattern.TeleportTarget fukkit$findAndTeleport(Entity entity, BlockPos pos, float yawAccess, int searchRadius, boolean searchOnly) {
+	public BlockPattern.TeleportTarget fukkit$findAndTeleport(Entity entity, BlockPos pos, float yawAccess,
+	                                                          int searchRadius, boolean searchOnly) {
 		Vec3d vec3d = entity.getLastNetherPortalDirectionVector();
 		Direction direction = entity.getLastNetherPortalDirection();
-		BlockPattern.TeleportTarget teleportTarget = this.fukkit$findPortal(pos, entity.getVelocity(), direction, vec3d.x, vec3d.y, entity instanceof PlayerEntity, searchRadius); // CraftBukkit - add location and searchRadius
-		if (searchOnly) return teleportTarget; // CraftBukkit - optional teleporting
+		BlockPattern.TeleportTarget teleportTarget = this.fukkit$findPortal(pos, entity
+		                                                                         .getVelocity(), direction, vec3d.x,
+		vec3d.y, entity instanceof PlayerEntity, searchRadius); // CraftBukkit - add location and searchRadius
+		if (searchOnly) {
+			return teleportTarget; // CraftBukkit - optional teleporting
+		}
 
 		if (teleportTarget == null) {
 			return null;
@@ -51,11 +56,19 @@ public class PortalForcerMixin {
 		}
 	}
 
-	public BlockPattern.TeleportTarget fukkit$findPortal(BlockPos searchStart, Vec3d vec3d, Direction enumdirection, double d0, double d1, boolean flag, int searchRadius) {
+	public BlockPattern.TeleportTarget fukkit$findPortal(BlockPos searchStart, Vec3d vec3d, Direction enumdirection,
+	                                                     double d0, double d1, boolean flag, int searchRadius) {
 		PointOfInterestStorage poiStorage = this.world.getPointOfInterestStorage();
 		poiStorage.method_22439(this.world, searchStart, 128);
-		List<PointOfInterest> list = poiStorage.method_22383((villageplacetype) -> villageplacetype == PointOfInterestType.NETHER_PORTAL, searchStart, searchRadius, PointOfInterestStorage.OccupationStatus.ANY).collect(Collectors.toList()); // CraftBukkit - searchRadius
-		Optional<PointOfInterest> optional = list.stream().min(Comparator.<PointOfInterest>comparingDouble((record) -> record.getPos().getSquaredDistance(searchStart)).thenComparingInt((villageplacerecord) -> villageplacerecord.getPos().getY()));
+		List<PointOfInterest> list = poiStorage
+		                             .method_22383((villageplacetype) -> villageplacetype == PointOfInterestType.NETHER_PORTAL, searchStart, searchRadius, PointOfInterestStorage.OccupationStatus.ANY)
+		                             .collect(Collectors.toList()); // CraftBukkit - searchRadius
+		Optional<PointOfInterest> optional = list.stream()
+		                                         .min(Comparator.<PointOfInterest>comparingDouble((record) -> record
+		                                                                                                      .getPos()
+		                                                                                                      .getSquaredDistance(searchStart))
+		                                              .thenComparingInt((villageplacerecord) -> villageplacerecord
+		                                                                                        .getPos().getY()));
 		return optional.map((poi) -> {
 			BlockPos pos = poi.getPos();
 
@@ -127,7 +140,8 @@ public class PortalForcerMixin {
 										int l4 = j2 + (i4 - 1) * j3 - l3 * l2;
 
 										pos.set(k3, j4, l4);
-										if (k4 < 0 && !this.world.getBlockState(pos).getMaterial().isSolid() || k4 >= 0 && !this.world.isAir(pos)) {
+										if (k4 < 0 && !this.world.getBlockState(pos).getMaterial()
+										                         .isSolid() || k4 >= 0 && !this.world.isAir(pos)) {
 											continue label257;
 										}
 									}
@@ -173,7 +187,8 @@ public class PortalForcerMixin {
 										k3 = k2 + i4;
 										j4 = j2 + (l3 - 1) * j3;
 										pos.set(k4, k3, j4);
-										if (i4 < 0 && !this.world.getBlockState(pos).getMaterial().isSolid() || i4 >= 0 && !this.world.isAir(pos)) {
+										if (i4 < 0 && !this.world.getBlockState(pos).getMaterial()
+										                         .isSolid() || i4 >= 0 && !this.world.isAir(pos)) {
 											continue label205;
 										}
 									}
@@ -207,7 +222,9 @@ public class PortalForcerMixin {
 			l5 = -l5;
 		}
 
-		org.bukkit.craftbukkit.util.BlockStateListPopulator blockList = new org.bukkit.craftbukkit.util.BlockStateListPopulator(this.world); // CraftBukkit - Use BlockStateListPopulator
+		org.bukkit.craftbukkit.util.BlockStateListPopulator blockList =
+		new org.bukkit.craftbukkit.util.BlockStateListPopulator(this.world); // CraftBukkit - Use
+		// BlockStateListPopulator
 		if (d0 < 0.0D) {
 			i1 = MathHelper.clamp(i1, 70, this.world.getEffectiveHeight() - 10);
 			j5 = i1;
@@ -221,7 +238,8 @@ public class PortalForcerMixin {
 						boolean flag1 = l2 < 0;
 
 						pos.set(j3, l3, i4);
-						blockList.setBlockState(pos, flag1 ? Blocks.OBSIDIAN.getDefaultState() : Blocks.AIR.getDefaultState(), 3); // CraftBukkit
+						blockList.setBlockState(pos,
+						flag1 ? Blocks.OBSIDIAN.getDefaultState() : Blocks.AIR.getDefaultState(), 3); // CraftBukkit
 					}
 				}
 			}
@@ -236,7 +254,8 @@ public class PortalForcerMixin {
 			}
 		}
 
-		BlockState iblockdata = Blocks.NETHER_PORTAL.getDefaultState().with(NetherPortalBlock.AXIS, k5 == 0 ? Direction.Axis.Z : Direction.Axis.X);
+		BlockState iblockdata = Blocks.NETHER_PORTAL.getDefaultState().with(NetherPortalBlock.AXIS,
+		k5 == 0 ? Direction.Axis.Z : Direction.Axis.X);
 
 		for (i3 = 0; i3 < 2; ++i3) {
 			for (l2 = 0; l2 < 3; ++l2) {
@@ -246,10 +265,12 @@ public class PortalForcerMixin {
 		}
 
 		// CraftBukkit start
-		org.bukkit.World bworld = ((WorldAccess)this.world).getBukkit();
-		org.bukkit.event.world.PortalCreateEvent event = new org.bukkit.event.world.PortalCreateEvent((java.util.List<org.bukkit.block.BlockState>) (java.util.List) blockList.getList(), bworld, ((EntityAccess<?>)entity).getBukkit(), org.bukkit.event.world.PortalCreateEvent.CreateReason.NETHER_PAIR);
+		org.bukkit.World bworld = ((WorldAccess) this.world).getBukkit();
+		org.bukkit.event.world.PortalCreateEvent event = new org.bukkit.event.world.PortalCreateEvent((java.util.List<org.bukkit.block.BlockState>) (java.util.List) blockList
+		                                                                                                                                                             .getList(), bworld, ((EntityAccess<?>) entity)
+		                                                                                                                                                                                 .getBukkit(), org.bukkit.event.world.PortalCreateEvent.CreateReason.NETHER_PAIR);
 
-		((WorldAccess)this.world).getBukkitServer().getPluginManager().callEvent(event);
+		((WorldAccess) this.world).getBukkitServer().getPluginManager().callEvent(event);
 		if (!event.isCancelled()) {
 			blockList.updateList();
 		}

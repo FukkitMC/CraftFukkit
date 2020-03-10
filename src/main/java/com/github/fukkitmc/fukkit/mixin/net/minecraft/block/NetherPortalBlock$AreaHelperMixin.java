@@ -55,10 +55,16 @@ public class NetherPortalBlock$AreaHelperMixin {
 	}
 
 	// 3 birds 1 stone
-	@Redirect(method = "findHeight", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/IWorld;getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/BlockState;"), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/block/NetherPortalBlock$AreaHelper;validStateInsidePortal(Lnet/minecraft/block/BlockState;)Z")))
+	@Redirect (method = "findHeight", at = @At (value = "INVOKE",
+	                                            target = "Lnet/minecraft/world/IWorld;getBlockState" +
+	                                                     "(Lnet/minecraft/util/math/BlockPos;)" +
+	                                                     "Lnet/minecraft/block/BlockState;"),
+	           slice = @Slice (from = @At (value = "INVOKE",
+	                                       target = "Lnet/minecraft/block/NetherPortalBlock$AreaHelper;" +
+	                                                "validStateInsidePortal(Lnet/minecraft/block/BlockState;)Z")))
 	private net.minecraft.block.BlockState fukkit_height(IWorld world, BlockPos pos) {
 		net.minecraft.block.BlockState state = world.getBlockState(pos);
-		if(state.getBlock() == Blocks.OBSIDIAN) {
+		if (state.getBlock() == Blocks.OBSIDIAN) {
 			this.blocks.add(CraftBlock.at(world, pos).getState());
 		}
 		return state;
@@ -79,7 +85,8 @@ public class NetherPortalBlock$AreaHelperMixin {
 			}
 		}
 
-		PortalCreateEvent event = new PortalCreateEvent(this.blocks, bworld, null, PortalCreateEvent.CreateReason.FIRE);
+		PortalCreateEvent event = new PortalCreateEvent(this.blocks, bworld, null,
+		PortalCreateEvent.CreateReason.FIRE);
 		((WorldAccess) this.world.getWorld()).getBukkitServer().getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) {
@@ -90,7 +97,8 @@ public class NetherPortalBlock$AreaHelperMixin {
 			BlockPos blockposition = this.lowerCorner.offset(this.negativeDir, i);
 
 			for (int j = 0; j < this.height; ++j) {
-				this.world.setBlockState(blockposition.up(j), Blocks.NETHER_PORTAL.getDefaultState().with(NetherPortalBlock.AXIS, this.axis), 18);
+				this.world.setBlockState(blockposition.up(j), Blocks.NETHER_PORTAL.getDefaultState()
+				                                                                  .with(NetherPortalBlock.AXIS, this.axis), 18);
 			}
 		}
 

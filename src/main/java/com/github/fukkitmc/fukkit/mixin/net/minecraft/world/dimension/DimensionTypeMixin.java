@@ -6,11 +6,12 @@ import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Implements(@Interface(iface = DimensionTypeAccess.class, prefix = "fukkit$"))
-@Mixin(DimensionType.class)
+@Implements (@Interface (iface = DimensionTypeAccess.class, prefix = "fukkit$"))
+@Mixin (DimensionType.class)
 public class DimensionTypeMixin {
 	// TODO fix
 	private DimensionType type;
+
 	public DimensionType fukkit$getType() {
 		return this.type == null ? (DimensionType) (Object) this : this.type;
 	}

@@ -21,29 +21,45 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-@Mixin(DropperBlock.class)
+@Mixin (DropperBlock.class)
 public class DropperBlockMixin {
 	// isn't this an overwrite with extra steps?
 	// well yes but actually no
 	// I'm overwriting the else block where inventory != null
-	@Inject(method = "dispense", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/HopperBlockEntity;transfer(Lnet/minecraft/inventory/Inventory;Lnet/minecraft/inventory/Inventory;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/math/Direction;)Lnet/minecraft/item/ItemStack;"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_inventoryMoveEvent(World world, BlockPos pos, CallbackInfo ci, BlockPointerImpl blockPointerImpl, DispenserBlockEntity dispenserBlockEntity, int i, ItemStack itemStack, Direction direction, Inventory inventory) {
+	@Inject (method = "dispense", at = @At (value = "INVOKE",
+	                                        target = "Lnet/minecraft/block/entity/HopperBlockEntity;transfer" +
+	                                                 "(Lnet/minecraft/inventory/Inventory;" +
+	                                                 "Lnet/minecraft/inventory/Inventory;" +
+	                                                 "Lnet/minecraft/item/ItemStack;" +
+	                                                 "Lnet/minecraft/util/math/Direction;)" +
+	                                                 "Lnet/minecraft/item/ItemStack;"),
+	         locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_inventoryMoveEvent(World world, BlockPos pos, CallbackInfo ci,
+	                                       BlockPointerImpl blockPointerImpl,
+	                                       DispenserBlockEntity dispenserBlockEntity, int i, ItemStack itemStack,
+	                                       Direction direction, Inventory inventory) {
 		CraftItemStack oitemstack = CraftItemStack.asCraftMirror(itemStack.copy().split(1));
 		org.bukkit.inventory.Inventory destinationInventory;
 		if (inventory instanceof DoubleInventory) {
 			// TODO fix odd compile rror
 			destinationInventory = null;
-			//destinationInventory = new org.bukkit.craftbukkit.inventory.CraftInventoryDoubleChest((DoubleInventory) inventory);
+			//destinationInventory = new org.bukkit.craftbukkit.inventory.CraftInventoryDoubleChest((DoubleInventory)
+			// inventory);
 		} else {
-			destinationInventory = ((InventoryAccess)inventory).getOwner().getInventory();
+			destinationInventory = ((InventoryAccess) inventory).getOwner().getInventory();
 		}
 
-		InventoryMoveItemEvent event = new InventoryMoveItemEvent(((BlockEntityAccess)dispenserBlockEntity).getOwner().getInventory(), oitemstack.clone(), destinationInventory, true);
-		((WorldAccess)world).getBukkitServer().getPluginManager().callEvent(event);
+		InventoryMoveItemEvent event = new InventoryMoveItemEvent(((BlockEntityAccess) dispenserBlockEntity).getOwner()
+		                                                                                                    .getInventory(), oitemstack
+		                                                                                                                     .clone(), destinationInventory, true);
+		((WorldAccess) world).getBukkitServer().getPluginManager().callEvent(event);
 		if (event.isCancelled()) {
 			return;
 		}
-		ItemStack itemstack1 = HopperBlockEntity.transfer(dispenserBlockEntity, inventory, CraftItemStack.asNMSCopy(event.getItem()), direction.getOpposite());
+		ItemStack itemstack1 = HopperBlockEntity.transfer(dispenserBlockEntity, inventory, CraftItemStack
+		                                                                                   .asNMSCopy(event
+		                                                                                              .getItem()), direction
+		                                                                                                           .getOpposite());
 		if (event.getItem().equals(oitemstack) && itemstack1.isEmpty()) {
 			// CraftBukkit end
 			itemstack1 = itemStack.copy();

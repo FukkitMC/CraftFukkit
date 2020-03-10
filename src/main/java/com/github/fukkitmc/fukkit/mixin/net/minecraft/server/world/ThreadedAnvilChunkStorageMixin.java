@@ -5,8 +5,8 @@ import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import org.spongepowered.asm.mixin.*;
 
-@Implements(@Interface(iface = ThreadedAnvilChunkStorageAccess.class, prefix = "fukkit$"))
-@Mixin(ThreadedAnvilChunkStorage.class)
+@Implements (@Interface (iface = ThreadedAnvilChunkStorageAccess.class, prefix = "fukkit$"))
+@Mixin (ThreadedAnvilChunkStorage.class)
 public class ThreadedAnvilChunkStorageMixin {
 
 	@Shadow @Final private WorldGenerationProgressListener worldGenerationProgressListener;

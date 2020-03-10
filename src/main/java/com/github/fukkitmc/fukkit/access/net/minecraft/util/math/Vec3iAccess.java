@@ -5,12 +5,14 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 // TODO add to mixins.json
-@Mixin(Vec3i.class)
+@Mixin (Vec3i.class)
 public interface Vec3iAccess {
-	@Accessor("x")
+	@Accessor ("x")
 	void setX(int x);
-	@Accessor("y")
+
+	@Accessor ("y")
 	void setY(int y);
-	@Accessor("z")
+
+	@Accessor ("z")
 	void setZ(int z);
 }

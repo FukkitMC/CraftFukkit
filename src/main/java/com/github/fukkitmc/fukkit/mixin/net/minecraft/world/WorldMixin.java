@@ -44,7 +44,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -56,89 +55,11 @@ import static net.minecraft.world.World.isHeightInvalid;
 @Mixin (World.class)
 @Implements (@Interface (iface = WorldAccess.class, prefix = "fukkit$"))
 public abstract class WorldMixin implements IWorld {
-	@Mutable
-	@Shadow
-	@Final
-	protected ChunkManager chunkManager;
-
-	@Override
-	@Shadow
-	public abstract WorldBorder getWorldBorder();
-
 	@Shadow
 	@Final
 	public Dimension dimension;
-
-	@Override
-	@Shadow public abstract BlockState getBlockState(BlockPos pos);
-
-	@Shadow @Final private Profiler profiler;
-
-	@Override
-	@Shadow public abstract ChunkManager getChunkManager();
-
-	@Shadow public abstract void checkBlockRerender(BlockPos pos, BlockState old, BlockState updated);
-
 	@Shadow @Final public boolean isClient;
-
-	@Shadow public abstract void updateListeners(BlockPos pos, BlockState oldState, BlockState newState, int flags);
-
-	@Override
-	@Shadow public abstract void updateNeighbors(BlockPos pos, Block block);
-
-	@Shadow public abstract void updateHorizontalAdjacent(BlockPos pos, Block block);
-
-	@Shadow public abstract void onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock);
-
 	@Shadow @Final public List<BlockEntity> blockEntities;
-
-	@Shadow public abstract boolean addBlockEntity(BlockEntity blockEntity);
-
-	@Shadow @Final private Thread thread;
-	@Shadow protected boolean iteratingTickingBlockEntities;
-
-	@Shadow protected abstract BlockEntity getPendingBlockEntity(BlockPos blockPos);
-
-	@Shadow public abstract WorldChunk getWorldChunk(BlockPos blockPos);
-
-	@Shadow public abstract void setBlockEntity(BlockPos pos, BlockEntity blockEntity);
-
-	@Shadow public abstract boolean isRaining();
-
-	@Shadow protected float rainGradientPrev;
-	@Shadow protected float rainGradient;
-	@Shadow protected float thunderGradientPrev;
-	@Shadow protected float thunderGradient;
-	@Shadow @Final protected LevelProperties properties;
-
-	@Override
-	@Shadow public abstract World getWorld();
-
-	@Shadow public abstract long getTimeOfDay();
-
-	@Shadow public abstract GameRules getGameRules();
-
-	@Shadow public abstract void setTimeOfDay(long time);
-
-	@Shadow public abstract void tickEntity(Consumer<Entity> consumer, Entity entity);
-
-	@Override
-	@Shadow public abstract long getSeed();
-
-	@Override
-	@Shadow public abstract LevelProperties getLevelProperties();
-
-	@Override
-	@Shadow public abstract WorldChunk getChunk(int i, int j);
-
-	@Override
-	@Shadow public abstract Chunk getChunk(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create);
-
-	@Shadow public native Explosion createExplosion(Entity entity, DamageSource damageSource, double x, double y, double z, float power, boolean createFire, Explosion.DestructionType destructionType);
-
-	@Shadow public abstract void removeBlockEntity(BlockPos blockPos);
-
-	private CraftWorld world;
 	public boolean pvpMode;
 	public boolean keepSpawnInMemory = true;
 	public ChunkGenerator generator;
@@ -149,15 +70,75 @@ public abstract class WorldMixin implements IWorld {
 	public long ticksPerAnimalSpawns;
 	public long ticksPerMonsterSpawns;
 	public boolean populating;
+	public Map<BlockPos, BlockEntity> capturedBlockEntities = Maps.newHashMap();
+	@Mutable
+	@Shadow
+	@Final
+	protected ChunkManager chunkManager;
+	@Shadow protected boolean iteratingTickingBlockEntities;
+	@Shadow protected float rainGradientPrev;
+	@Shadow protected float rainGradient;
+	@Shadow protected float thunderGradientPrev;
+	@Shadow protected float thunderGradient;
+	@Shadow @Final protected LevelProperties properties;
+	@Shadow @Final private Profiler profiler;
+	@Shadow @Final private Thread thread;
+	private CraftWorld world;
 	private boolean initialized;
 
+	@Shadow public abstract void setBlockEntity(BlockPos pos, BlockEntity blockEntity);
+
+	@Shadow public abstract boolean isRaining();
+
+	@Shadow public abstract long getTimeOfDay();
+
+	@Shadow public abstract void setTimeOfDay(long time);
+
+	@Shadow public abstract GameRules getGameRules();
+
+	@Shadow public abstract void tickEntity(Consumer<Entity> consumer, Entity entity);
+
+	@Override
+	@Shadow public abstract long getSeed();
+
+	@Override
+	@Shadow public abstract World getWorld();
+
+	@Override
+	@Shadow public abstract LevelProperties getLevelProperties();
+
+	@Override
+	@Shadow public abstract ChunkManager getChunkManager();
+
+	@Override
+	@Shadow public abstract void updateNeighbors(BlockPos pos, Block block);
+
+	@Override
+	@Shadow public abstract Chunk getChunk(int chunkX, int chunkZ, ChunkStatus leastStatus, boolean create);
+
+	@Override
+	@Shadow public abstract WorldChunk getChunk(int i, int j);
+
+	@Shadow
+	public native Explosion createExplosion(Entity entity, DamageSource damageSource, double x, double y, double z,
+	                                        float power, boolean createFire,
+	                                        Explosion.DestructionType destructionType);
+
+	@Shadow public abstract void removeBlockEntity(BlockPos blockPos);
+
 	@Inject (method = "<init>", at = @At ("TAIL"))
-	public void after(LevelProperties levelProperties, DimensionType dimensionType, BiFunction<World, Dimension, ChunkManager> chunkManagerProvider, Profiler profiler, boolean isClient, CallbackInfo ci) {
+	public void after(LevelProperties levelProperties, DimensionType dimensionType, BiFunction<World, Dimension,
+	                                                                                              ChunkManager> chunkManagerProvider, Profiler profiler, boolean isClient, CallbackInfo ci) {
 		((WorldBorderAccess) this.getWorldBorder()).setServerWorld((ServerWorld) (Object) this);
 		this.getWorldBorder().addListener(new CraftWorldBorderListener((World) (Object) this));
 	}
 
-	@Inject (method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z", at = @At ("HEAD"))
+	@Override
+	@Shadow
+	public abstract WorldBorder getWorldBorder();
+
+	@Inject (method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z",
+	         at = @At ("HEAD"))
 	private void fukkit_captureStates(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<Boolean> cir) {
 		if (this.captureTreeGeneration) {
 			CraftBlockState blockstate = null;
@@ -171,7 +152,8 @@ public abstract class WorldMixin implements IWorld {
 				}
 			}
 			if (blockstate == null) {
-				blockstate = org.bukkit.craftbukkit.block.CraftBlockState.getBlockState((World) (Object) this, pos, flags);
+				blockstate = org.bukkit.craftbukkit.block.CraftBlockState
+				             .getBlockState((World) (Object) this, pos, flags);
 			}
 			blockstate.setData(state);
 			this.capturedBlockStates.add(blockstate);
@@ -179,9 +161,13 @@ public abstract class WorldMixin implements IWorld {
 		}
 	}
 
-	
-	@Redirect (method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z", at = @At (value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Z)Lnet/minecraft/block/BlockState;"))
-	private BlockState fukkit_captureStates0(WorldChunk chunk, BlockPos pos, BlockState state, boolean bl, BlockPos pos2, BlockState state2, int flags) {
+	@Redirect (method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z",
+	           at = @At (value = "INVOKE",
+	                     target = "Lnet/minecraft/world/chunk/WorldChunk;setBlockState" +
+	                              "(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Z)" +
+	                              "Lnet/minecraft/block/BlockState;"))
+	private BlockState fukkit_captureStates0(WorldChunk chunk, BlockPos pos, BlockState state, boolean bl,
+	                                         BlockPos pos2, BlockState state2, int flags) {
 		CraftBlockState craftState = null;
 		if (this.captureBlockStates) {
 			craftState = CraftBlockState.getBlockState((World) (Object) this, pos, flags);
@@ -189,116 +175,125 @@ public abstract class WorldMixin implements IWorld {
 		}
 
 		BlockState returned = ((WorldChunkAccess) chunk).setType(pos, state, bl, (flags & 1024) == 0);
-		if(returned == null && this.captureBlockStates) {
+		if (returned == null && this.captureBlockStates) {
 			this.capturedBlockStates.remove(craftState);
 		}
 		return returned;
 	}
 
-	@Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/BlockState;"), cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_modPhysicUpdate(BlockPos pos, BlockState state, int i, CallbackInfoReturnable<Boolean> cir, WorldChunk chunk, Block block, BlockState otherState) {
+	@Inject (method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;I)Z",
+	         at = @At (value = "INVOKE",
+	                   target = "Lnet/minecraft/world/World;getBlockState(Lnet/minecraft/util/math/BlockPos;)" +
+	                            "Lnet/minecraft/block/BlockState;"),
+	         cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_modPhysicUpdate(BlockPos pos, BlockState state, int i, CallbackInfoReturnable<Boolean> cir,
+	                                    WorldChunk chunk, Block block, BlockState otherState) {
 		BlockState at = this.getBlockState(pos);
-		if (at != otherState && (at.getOpacity((World) (Object) this, pos) != otherState.getOpacity((World) (Object) this, pos) || at.getLuminance() != otherState.getLuminance() || at.hasSidedTransparency() || otherState.hasSidedTransparency())) {
+		if (at != otherState && (at.getOpacity((World) (Object) this, pos) != otherState
+		                                                                      .getOpacity((World) (Object) this, pos) || at
+		                                                                                                                 .getLuminance() != otherState
+		                                                                                                                                    .getLuminance() || at
+		                                                                                                                                                       .hasSidedTransparency() || otherState
+		                                                                                                                                                                                  .hasSidedTransparency())) {
 			this.profiler.push("queueCheckLight");
 			this.getChunkManager().getLightingProvider().checkBlock(pos);
 			this.profiler.pop();
 		}
 
-		if(!this.captureBlockStates) {
+		if (!this.captureBlockStates) {
 			this.fukkit$notifyAndUpdatePhysics(pos, chunk, otherState, state, at, i);
 		}
 	}
 
-	public void fukkit$notifyAndUpdatePhysics(BlockPos blockposition, WorldChunk chunk, net.minecraft.block.BlockState oldBlock, net.minecraft.block.BlockState newBlock, net.minecraft.block.BlockState actualBlock, int i) {
-		if (actualBlock == newBlock) {
-			if (oldBlock != actualBlock) {
-				this.checkBlockRerender(blockposition, oldBlock, actualBlock);
-			}
+	@Shadow public abstract void checkBlockRerender(BlockPos pos, BlockState old, BlockState updated);
 
-			if ((i & 2) != 0 && (!this.isClient || (i & 4) == 0) && (this.isClient || chunk == null || (chunk.getLevelType() != null && chunk.getLevelType().isAfter(ChunkHolder.LevelType.TICKING)))) { // allow chunk to be null here as chunk.isReady() is false when we send our notification during block placement
-				this.updateListeners(blockposition, oldBlock, newBlock, i);
-			}
+	@Shadow public abstract void updateListeners(BlockPos pos, BlockState oldState, BlockState newState, int flags);
 
-			if (!this.isClient && (i & 1) != 0) {
-				this.updateNeighbors(blockposition, oldBlock.getBlock());
-				if (newBlock.hasComparatorOutput()) {
-					this.updateHorizontalAdjacent(blockposition, newBlock.getBlock());
-				}
-			}
+	@Shadow public abstract void updateHorizontalAdjacent(BlockPos pos, Block block);
 
-			if ((i & 16) == 0) {
-				int j = i & -2;
+	@Shadow public abstract void onBlockChanged(BlockPos pos, BlockState oldBlock, BlockState newBlock);
 
-				// CraftBukkit start
-				oldBlock.method_11637(this, blockposition, j); // Don't call an event for the old block to limit event spam
-				CraftWorld world = ((ServerWorldAccess) this).getBukkit();
-				if (world != null) {
-					BlockPhysicsEvent event = new BlockPhysicsEvent(world.getBlockAt(blockposition.getX(), blockposition.getY(), blockposition.getZ()), CraftBlockData.fromData(newBlock));
-					((ServerWorldAccess) this).getBukkitServer().getPluginManager().callEvent(event);
-
-					if (event.isCancelled()) {
-						return;
-					}
-				}
-				// CraftBukkit end
-				newBlock.updateNeighborStates(this, blockposition, j);
-				newBlock.method_11637(this, blockposition, j);
-			}
-
-			this.onBlockChanged(blockposition, oldBlock, actualBlock);
-		}
-	}
-
-	@Inject(method = "updateNeighbors", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;updateNeighborsAlways(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;)V"))
+	@Inject (method = "updateNeighbors", at = @At (value = "INVOKE",
+	                                               target = "Lnet/minecraft/world/World;updateNeighborsAlways" +
+	                                                        "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                        "Lnet/minecraft/block/Block;)V"))
 	private void fukkit_populating(BlockPos pos, Block block, CallbackInfo ci) {
-		if(this.populating)
-			ci.cancel();
+		if (this.populating) { ci.cancel(); }
 	}
 
-	@Inject(method = "updateNeighbor", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;neighborUpdate(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/Block;Lnet/minecraft/util/math/BlockPos;Z)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_blockPhysics(BlockPos sourcePos, Block sourceBlock, BlockPos neighborPos, CallbackInfo ci, BlockState state) {
-		CraftWorld world = ((ServerWorldAccess)this).getBukkit();
-		if(world != null) {
-			BlockPhysicsEvent event = new BlockPhysicsEvent(world.getBlockAt(sourcePos.getX(), sourcePos.getY(), sourcePos.getZ()), CraftBlockData.fromData(state), world.getBlockAt(neighborPos.getX(), neighborPos.getY(), neighborPos.getZ()));
+	@Inject (method = "updateNeighbor", at = @At (value = "INVOKE",
+	                                              target = "Lnet/minecraft/block/BlockState;neighborUpdate" +
+	                                                       "(Lnet/minecraft/world/World;" +
+	                                                       "Lnet/minecraft/util/math/BlockPos;" +
+	                                                       "Lnet/minecraft/block/Block;" +
+	                                                       "Lnet/minecraft/util/math/BlockPos;Z)V"),
+	         locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_blockPhysics(BlockPos sourcePos, Block sourceBlock, BlockPos neighborPos, CallbackInfo ci,
+	                                 BlockState state) {
+		CraftWorld world = ((ServerWorldAccess) this).getBukkit();
+		if (world != null) {
+			BlockPhysicsEvent event = new BlockPhysicsEvent(world
+			                                                .getBlockAt(sourcePos.getX(), sourcePos.getY(), sourcePos
+			                                                                                                .getZ()),
+			CraftBlockData
+			                                                                                                          .fromData(state), world
+			                                                                                                                            .getBlockAt(neighborPos
+			                                                                                                                                        .getX(), neighborPos
+			                                                                                                                                                 .getY(), neighborPos
+			                                                                                                                                                          .getZ()));
 			((ServerWorldAccess) this).getBukkitServer().getPluginManager().callEvent(event);
-			if(event.isCancelled())
-				ci.cancel();
+			if (event.isCancelled()) { ci.cancel(); }
 		}
 	}
 
-	@Inject(method = "getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/BlockState;", at = @At("HEAD"))
+	@Inject (method = "getBlockState(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/BlockState;",
+	         at = @At ("HEAD"))
 	private void fukkit_capture(BlockPos pos, CallbackInfoReturnable<BlockState> cir) {
-		if(this.captureTreeGeneration) {
+		if (this.captureTreeGeneration) {
 			for (CraftBlockState state : this.capturedBlockStates) {
-				if(state.getPosition().equals(pos)) {
+				if (state.getPosition().equals(pos)) {
 					cir.setReturnValue(state.getHandle());
 				}
 			}
 		}
 	}
 
-	@Redirect(method = "isDay", at =  @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;getType()Lnet/minecraft/world/dimension/DimensionType;"))
+	@Redirect (method = "isDay", at = @At (value = "INVOKE",
+	                                       target = "Lnet/minecraft/world/dimension/Dimension;getType()" +
+	                                                "Lnet/minecraft/world/dimension/DimensionType;"))
 	private DimensionType fukkit_getType(Dimension dimension) {
-		return ((DimensionTypeAccess)dimension.getType()).getType();
-	}
-	@Redirect(method = "isNight", at =  @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;getType()Lnet/minecraft/world/dimension/DimensionType;"))
-	private DimensionType fukkit_getType0(Dimension dimension) {
-		return ((DimensionTypeAccess)dimension.getType()).getType();
+		return ((DimensionTypeAccess) dimension.getType()).getType();
 	}
 
-	@Redirect(method = "tickBlockEntities", at = @At(value = "INVOKE", target = "Ljava/util/List;contains(Ljava/lang/Object;)Z"))
+	@Redirect (method = "isNight", at = @At (value = "INVOKE",
+	                                         target = "Lnet/minecraft/world/dimension/Dimension;getType()" +
+	                                                  "Lnet/minecraft/world/dimension/DimensionType;"))
+	private DimensionType fukkit_getType0(Dimension dimension) {
+		return ((DimensionTypeAccess) dimension.getType()).getType();
+	}
+
+	@Redirect (method = "tickBlockEntities",
+	           at = @At (value = "INVOKE", target = "Ljava/util/List;contains(Ljava/lang/Object;)Z"))
 	private boolean fukkit_movedDown(List list, Object o) {
 		return true; // force if statement to exit
 	}
 
 	// not exact, is injected before, not after :ohno:
-	@Inject(method = "tickBlockEntities", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;updateListeners(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/BlockState;I)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void fukkit_fromAbove(CallbackInfo ci, Profiler profiler, int i, BlockEntity entity, WorldChunk worldChunk, BlockState blockState) {
-		if(!this.blockEntities.contains(entity)) {
+	@Inject (method = "tickBlockEntities", at = @At (value = "INVOKE",
+	                                                 target = "Lnet/minecraft/world/World;updateListeners" +
+	                                                          "(Lnet/minecraft/util/math/BlockPos;" +
+	                                                          "Lnet/minecraft/block/BlockState;" +
+	                                                          "Lnet/minecraft/block/BlockState;I)V"),
+	         locals = LocalCapture.CAPTURE_FAILHARD)
+	private void fukkit_fromAbove(CallbackInfo ci, Profiler profiler, int i, BlockEntity entity, WorldChunk worldChunk
+	, BlockState blockState) {
+		if (!this.blockEntities.contains(entity)) {
 			this.addBlockEntity(entity);
 		}
 		// don't screw this up - md5 probably
 	}
+
+	@Shadow public abstract boolean addBlockEntity(BlockEntity blockEntity);
 
 	/**
 	 * @author HalfOf2
@@ -311,49 +306,24 @@ public abstract class WorldMixin implements IWorld {
 		return this.fukkit$getBlockEntity(pos, true);
 	}
 
-	public Map<BlockPos, BlockEntity> capturedBlockEntities = Maps.newHashMap();
+	@Override
+	@Shadow public abstract BlockState getBlockState(BlockPos pos);
 
-	public BlockEntity fukkit$getBlockEntity(BlockPos blockposition, boolean validate) {
-		// CraftBukkit end
-		if (isHeightInvalid(blockposition)) {
-			return null;
-		} else if (!this.isClient && Thread.currentThread() != this.thread) {
-			return null;
-		} else {
-			// CraftBukkit start
-			if (this.capturedBlockEntities.containsKey(blockposition)) {
-				return this.capturedBlockEntities.get(blockposition);
-			}
-			// CraftBukkit end
+	@Shadow protected abstract BlockEntity getPendingBlockEntity(BlockPos blockPos);
 
-			BlockEntity blockEntity = null;
+	@Shadow public abstract WorldChunk getWorldChunk(BlockPos blockPos);
 
-			if (this.iteratingTickingBlockEntities) {
-				blockEntity = this.getPendingBlockEntity(blockposition);
-			}
-
-			if (blockEntity == null) {
-				blockEntity = this.getWorldChunk(blockposition).getBlockEntity(blockposition, WorldChunk.CreationType.IMMEDIATE);
-			}
-
-			if (blockEntity == null) {
-				blockEntity = this.getPendingBlockEntity(blockposition);
-			}
-
-			return blockEntity;
-		}
-	}
-
-	@Inject(method = "setBlockEntity", at = @At(value = "JUMP", ordinal = 2))
+	@Inject (method = "setBlockEntity", at = @At (value = "JUMP", ordinal = 2))
 	private void fukkit_capture(BlockPos pos, BlockEntity blockEntity, CallbackInfo ci) {
-		if(this.captureBlockStates) {
+		if (this.captureBlockStates) {
 			blockEntity.setLocation((World) (Object) this, pos);
 			this.capturedBlockEntities.put(pos, blockEntity);
 			ci.cancel();
 		}
 	}
 
-	@Redirect(method = "removeBlockEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getBlockEntity(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/entity/BlockEntity;"))
+	@Redirect (method = "removeBlockEntity", at = @At (value = "INVOKE",
+	                                                   target = "Lnet/minecraft/world/World;getBlockEntity(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/block/entity/BlockEntity;"))
 	private BlockEntity fukkit_redirect(World world, BlockPos pos) {
 		return this.fukkit$getBlockEntity(pos, false);
 	}
@@ -458,6 +428,90 @@ public abstract class WorldMixin implements IWorld {
 
 	public void fukkit$setInitialized(boolean init) {
 		this.initialized = init;
+	}
+
+	public void fukkit$notifyAndUpdatePhysics(BlockPos blockposition, WorldChunk chunk,
+	                                          net.minecraft.block.BlockState oldBlock,
+	                                          net.minecraft.block.BlockState newBlock,
+	                                          net.minecraft.block.BlockState actualBlock, int i) {
+		if (actualBlock == newBlock) {
+			if (oldBlock != actualBlock) {
+				this.checkBlockRerender(blockposition, oldBlock, actualBlock);
+			}
+
+			if ((i & 2) != 0 && (!this.isClient || (i & 4) == 0) && (this.isClient || chunk == null || (chunk
+			                                                                                            .getLevelType() != null && chunk
+			                                                                                                                       .getLevelType()
+			                                                                                                                       .isAfter(ChunkHolder.LevelType.TICKING)))) { // allow chunk to be null here as chunk.isReady() is false when we send our notification during block placement
+				this.updateListeners(blockposition, oldBlock, newBlock, i);
+			}
+
+			if (!this.isClient && (i & 1) != 0) {
+				this.updateNeighbors(blockposition, oldBlock.getBlock());
+				if (newBlock.hasComparatorOutput()) {
+					this.updateHorizontalAdjacent(blockposition, newBlock.getBlock());
+				}
+			}
+
+			if ((i & 16) == 0) {
+				int j = i & -2;
+
+				// CraftBukkit start
+				oldBlock
+				.method_11637(this, blockposition, j); // Don't call an event for the old block to limit event spam
+				CraftWorld world = ((ServerWorldAccess) this).getBukkit();
+				if (world != null) {
+					BlockPhysicsEvent event = new BlockPhysicsEvent(world.getBlockAt(blockposition.getX(),
+					blockposition
+					                                                                                       .getY(),
+					blockposition
+					                                                                                                .getZ()), CraftBlockData
+					                                                                                                          .fromData(newBlock));
+					((ServerWorldAccess) this).getBukkitServer().getPluginManager().callEvent(event);
+
+					if (event.isCancelled()) {
+						return;
+					}
+				}
+				// CraftBukkit end
+				newBlock.updateNeighborStates(this, blockposition, j);
+				newBlock.method_11637(this, blockposition, j);
+			}
+
+			this.onBlockChanged(blockposition, oldBlock, actualBlock);
+		}
+	}
+
+	public BlockEntity fukkit$getBlockEntity(BlockPos blockposition, boolean validate) {
+		// CraftBukkit end
+		if (isHeightInvalid(blockposition)) {
+			return null;
+		} else if (!this.isClient && Thread.currentThread() != this.thread) {
+			return null;
+		} else {
+			// CraftBukkit start
+			if (this.capturedBlockEntities.containsKey(blockposition)) {
+				return this.capturedBlockEntities.get(blockposition);
+			}
+			// CraftBukkit end
+
+			BlockEntity blockEntity = null;
+
+			if (this.iteratingTickingBlockEntities) {
+				blockEntity = this.getPendingBlockEntity(blockposition);
+			}
+
+			if (blockEntity == null) {
+				blockEntity = this.getWorldChunk(blockposition)
+				                  .getBlockEntity(blockposition, WorldChunk.CreationType.IMMEDIATE);
+			}
+
+			if (blockEntity == null) {
+				blockEntity = this.getPendingBlockEntity(blockposition);
+			}
+
+			return blockEntity;
+		}
 	}
 
 }

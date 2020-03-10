@@ -7,8 +7,9 @@ import java.util.ArrayList;
 public class BlockStateArrayList extends ArrayList<CraftBlockState> {
 	@Override
 	public boolean add(CraftBlockState blockState) {
-		for (BlockState blockState1 : this)
-			if (blockState1.getLocation().equals(blockState.getLocation())) return false;
+		for (BlockState blockState1 : this) {
+			if (blockState1.getLocation().equals(blockState.getLocation())) { return false; }
+		}
 		return super.add(blockState);
 	}
 }

@@ -11,9 +11,9 @@ public class EntityUtil {
 	}
 
 	public static class ProcessableEffect {
+		private final EntityPotionEffectEvent.Cause cause;
 		private StatusEffect type;
 		private StatusEffectInstance effect;
-		private final EntityPotionEffectEvent.Cause cause;
 
 		public ProcessableEffect(StatusEffectInstance effect, EntityPotionEffectEvent.Cause cause) {
 			this.effect = effect;

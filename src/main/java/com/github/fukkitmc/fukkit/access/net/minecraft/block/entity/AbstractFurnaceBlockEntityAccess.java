@@ -5,5 +5,6 @@ import net.minecraft.item.ItemStack;
 
 public interface AbstractFurnaceBlockEntityAccess {
 	void dropExperience(PlayerEntity entityhuman, ItemStack itemstack, int amount);
+
 	void dropExperience(PlayerEntity entityhuman, int i, float f, ItemStack itemstack, int amount);
 }

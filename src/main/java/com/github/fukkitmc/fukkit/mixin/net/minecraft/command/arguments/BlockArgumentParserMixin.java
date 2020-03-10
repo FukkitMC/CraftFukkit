@@ -13,12 +13,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Mixin(BlockArgumentParser.class)
+@Mixin (BlockArgumentParser.class)
 public class BlockArgumentParserMixin {
 	@Mutable
 	@Shadow @Final private Map<Property<?>, Comparable<?>> blockProperties;
 
-	@Inject(method = "<init>", at = @At("TAIL"))
+	@Inject (method = "<init>", at = @At ("TAIL"))
 	public void postInit(StringReader reader, boolean allowTag, CallbackInfo ci) {
 		this.blockProperties = new LinkedHashMap<>();
 	}

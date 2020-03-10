@@ -25,7 +25,8 @@ public class ServerLoginNetworkHandler$1Mixin extends Thread {
 	@Shadow
 	private ServerLoginNetworkHandler field_14176;
 
-	@Inject (method = "run", at = @At (value = "JUMP", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
+	@Inject (method = "run", at = @At (value = "JUMP", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD,
+	         cancellable = true)
 	private void fukkit_preLoginEvent(CallbackInfo ci, GameProfile profile, String string) {
 		try {
 			if (!this.field_14176.connection.isOpen()) {
@@ -35,7 +36,8 @@ public class ServerLoginNetworkHandler$1Mixin extends Thread {
 			String name = profile.getName();
 			InetAddress address = ((InetSocketAddress) this.field_14176.connection.getAddress()).getAddress();
 			UUID uuid = profile.getId();
-			CraftServer server = ((MinecraftServerAccess) ((ServerLoginNetworkHandlerAccess) this.field_14176).getServer()).getBukkit();
+			CraftServer server = ((MinecraftServerAccess) ((ServerLoginNetworkHandlerAccess) this.field_14176)
+			                                              .getServer()).getBukkit();
 			AsyncPlayerPreLoginEvent asyncEvent = new AsyncPlayerPreLoginEvent(name, address, uuid);
 			server.getPluginManager().callEvent(asyncEvent);
 			if (PlayerPreLoginEvent.getHandlerList().getRegisteredListeners().length != 0) {
@@ -58,7 +60,10 @@ public class ServerLoginNetworkHandler$1Mixin extends Thread {
 			}
 		} catch (Exception e) {
 			((ServerLoginNetworkHandlerAccess) this.field_14176).disconnect("Failed to verify username!");
-			((MinecraftServerAccess)((ServerLoginNetworkHandlerAccess)this.field_14176).getServer()).getBukkit().getLogger().log(java.util.logging.Level.WARNING, "Exception verifying " + profile.getName(), e);
+			((MinecraftServerAccess) ((ServerLoginNetworkHandlerAccess) this.field_14176).getServer()).getBukkit()
+			                                                                                          .getLogger()
+			                                                                                          .log(java.util.logging.Level.WARNING, "Exception verifying " + profile
+			                                                                                                                                                         .getName(), e);
 		}
 	}
 }

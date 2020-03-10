@@ -17,19 +17,21 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(CakeBlock.class)
+@Mixin (CakeBlock.class)
 public class CakeBlockMixin {
-	@Inject(method = "tryEat", at = @At(target = "Lnet/minecraft/entity/player/HungerManager;add(IF)V", value = "INVOKE"))
-	private void fukkit_foodEvent(IWorld world, BlockPos pos, BlockState state, PlayerEntity player, CallbackInfoReturnable<ActionResult> cir) {
+	@Inject (method = "tryEat",
+	         at = @At (target = "Lnet/minecraft/entity/player/HungerManager;add(IF)V", value = "INVOKE"))
+	private void fukkit_foodEvent(IWorld world, BlockPos pos, BlockState state, PlayerEntity player,
+	                              CallbackInfoReturnable<ActionResult> cir) {
 		HungerManager manager = player.getHungerManager();
 		int old = manager.getFoodLevel();
 		FoodLevelChangeEvent event = CraftEventFactory.callFoodLevelChangeEvent(player, 2 + old);
-		if(!event.isCancelled())
-			manager.add(event.getFoodLevel() - old, .1f);
-		((CraftPlayer)((EntityAccess)player).getBukkit()).sendHealthUpdate();
+		if (!event.isCancelled()) { manager.add(event.getFoodLevel() - old, .1f); }
+		((CraftPlayer) ((EntityAccess) player).getBukkit()).sendHealthUpdate();
 	}
 
-	@Redirect (method = "tryEat", at = @At(target = "Lnet/minecraft/entity/player/HungerManager;add(IF)V", value = "INVOKE"))
+	@Redirect (method = "tryEat",
+	           at = @At (target = "Lnet/minecraft/entity/player/HungerManager;add(IF)V", value = "INVOKE"))
 	private void fukkit_nullifyEat(HungerManager manager, int food, float f) {
 
 	}

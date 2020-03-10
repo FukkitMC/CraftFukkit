@@ -12,11 +12,12 @@ import net.minecraft.text.TranslatableText;
 // w:arr:ning
 // BlockChest.DoubleInventory
 public class BukkitChestDoubleInventory implements NameableContainerFactory {
+	public final net.minecraft.inventory.DoubleInventory inventory;
 	private final ChestBlockEntity leftChest;
 	private final ChestBlockEntity rightChest;
-	public final net.minecraft.inventory.DoubleInventory inventory;
 
-	public BukkitChestDoubleInventory(ChestBlockEntity leftChest, ChestBlockEntity rightChest, net.minecraft.inventory.DoubleInventory inventory) {
+	public BukkitChestDoubleInventory(ChestBlockEntity leftChest, ChestBlockEntity rightChest,
+	                                  net.minecraft.inventory.DoubleInventory inventory) {
 		this.leftChest = leftChest;
 		this.rightChest = rightChest;
 		this.inventory = inventory;
@@ -24,7 +25,9 @@ public class BukkitChestDoubleInventory implements NameableContainerFactory {
 
 	@Override
 	public Text getDisplayName() {
-		return this.leftChest.hasCustomName() ? this.leftChest.getDisplayName() : (this.rightChest.hasCustomName() ? this.rightChest.getDisplayName() : new TranslatableText("container.chestDouble"));
+		return this.leftChest.hasCustomName() ? this.leftChest.getDisplayName() :
+		       (this.rightChest.hasCustomName() ? this.rightChest.getDisplayName() :
+		        new TranslatableText("container.chestDouble"));
 	}
 
 	@Override

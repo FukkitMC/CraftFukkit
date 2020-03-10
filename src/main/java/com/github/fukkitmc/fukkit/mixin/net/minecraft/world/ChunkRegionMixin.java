@@ -9,12 +9,13 @@ import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Implements(@Interface(iface = ChunkRegionAccess.class, prefix = "fukkit$"))
-@Mixin(ChunkRegion.class)
+@Implements (@Interface (iface = ChunkRegionAccess.class, prefix = "fukkit$"))
+@Mixin (ChunkRegion.class)
 public abstract class ChunkRegionMixin {
-	@Shadow public abstract boolean spawnEntity(Entity entity);
-
 	public boolean fukkit$addEntity(Entity entity, CreatureSpawnEvent.SpawnReason reason) {
-		return this.spawnEntity(entity); // in craftbukkit, this parameter doesn't actually do anything, quite strange :p
+		return this
+		       .spawnEntity(entity); // in craftbukkit, this parameter doesn't actually do anything, quite strange :p
 	}
+
+	@Shadow public abstract boolean spawnEntity(Entity entity);
 }

@@ -28,16 +28,23 @@ public abstract class WeightedPressurePlateBlockMixin extends AbstractPressurePl
 		super(settings);
 	}
 
-	@Redirect (method = "getRedstoneOutput(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)I", at = @At (value = "INVOKE", target = "Ljava/lang/Math;min(II)I"))
+	@Redirect (method = "getRedstoneOutput(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)I",
+	           at = @At (value = "INVOKE", target = "Ljava/lang/Math;min(II)I"))
 	private int fukkit_interactEvent(int a, int b, World world, BlockPos pos) {
 		int i = 0;
 		for (Entity entity : world.getNonSpectatingEntities(Entity.class, BOX.offset(pos))) {
 			Cancellable cancellable;
 
-			if (entity instanceof PlayerEntity)
-				cancellable = CraftEventFactory.callPlayerInteractEvent((PlayerEntity) entity, Action.PHYSICAL, pos, null, null, null);
-			else {
-				cancellable = new EntityInteractEvent(((EntityAccess<?>) entity).getBukkit(), ((WorldAccess) world).getBukkit().getBlockAt(pos.getX(), pos.getY(), pos.getZ()));
+			if (entity instanceof PlayerEntity) {
+				cancellable = CraftEventFactory
+				              .callPlayerInteractEvent((PlayerEntity) entity, Action.PHYSICAL, pos, null, null, null);
+			} else {
+				cancellable = new EntityInteractEvent(((EntityAccess<?>) entity).getBukkit(), ((WorldAccess) world)
+				                                                                              .getBukkit()
+				                                                                              .getBlockAt(pos
+				                                                                                          .getX(), pos
+				                                                                                                   .getY(), pos
+				                                                                                                            .getZ()));
 				((WorldAccess) world).getBukkitServer().getPluginManager().callEvent((EntityInteractEvent) cancellable);
 			}
 
