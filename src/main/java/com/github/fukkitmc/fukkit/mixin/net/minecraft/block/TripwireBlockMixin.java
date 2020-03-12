@@ -19,7 +19,7 @@ import java.util.List;
 @Mixin (TripwireBlock.class)
 public class TripwireBlockMixin {
 	@Inject (method = "updatePowered", at = @At (value = "JUMP", ordinal = 1, shift = At.Shift.AFTER),
-	         locals = LocalCapture.PRINT, cancellable = true)
+	         locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
 	private void fukkit_interactEvent(World world, BlockPos pos, CallbackInfo ci, BlockState state, boolean powered,
 	                                  boolean shouldPower, List<? extends Entity> list) {
 		if (shouldPower) { // powered != shouldPower is handled above

@@ -49,7 +49,7 @@ public class DropperBlockMixin {
 			destinationInventory = ((InventoryAccess) inventory).getOwner().getInventory();
 		}
 
-		InventoryMoveItemEvent event = new InventoryMoveItemEvent(((BlockEntityAccess) dispenserBlockEntity).getOwner()
+		InventoryMoveItemEvent event = new InventoryMoveItemEvent(((InventoryAccess) dispenserBlockEntity).getOwner()
 		                                                                                                    .getInventory(), oitemstack
 		                                                                                                                     .clone(), destinationInventory, true);
 		((WorldAccess) world).getBukkitServer().getPluginManager().callEvent(event);

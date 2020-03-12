@@ -54,12 +54,10 @@ public abstract class ContainerMixin implements ContainerAccess {
 	// slice because big ass decomp error
 	@Redirect (method = "onSlotClick",
 	           at = @At (value = "INVOKE",
-	                     target = "Lnet/minecraft/container/Slot;setStack(Lnet/minecraft/item/ItemStack;)V"),
+	                     target = "Lnet/minecraft/container/Slot;setStack(Lnet/minecraft/item/ItemStack;)V", ordinal = 0),
 	           slice = @Slice (from = @At (value = "INVOKE",
 	                                       target = "Lnet/minecraft/container/Container;calculateStackSize" +
-	                                                "(Ljava/util/Set;ILnet/minecraft/item/ItemStack;I)V"),
-	                           to = @At (value = "INVOKE:FIRST",
-	                                     target = "Lnet/minecraft/item/ItemStack;setCount(I)V")))
+	                                                "(Ljava/util/Set;ILnet/minecraft/item/ItemStack;I)V")))
 	private void fukkit_putInMap(Slot slot, ItemStack itemStack) {
 		this.stacks.get().put(slot.id, itemStack);
 	}

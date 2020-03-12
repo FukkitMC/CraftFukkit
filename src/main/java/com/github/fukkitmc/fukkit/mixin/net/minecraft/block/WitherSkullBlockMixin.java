@@ -68,7 +68,7 @@ public class WitherSkullBlockMixin {
 	at = @At (value = "INVOKE",
 	          target = "Lnet/minecraft/world/World;getNonSpectatingEntities(Ljava/lang/Class;" +
 	                   "Lnet/minecraft/util/math/Box;)Ljava/util/List;"),
-	locals = LocalCapture.PRINT)
+	locals = LocalCapture.CAPTURE_FAILHARD)
 	private static void fukkit_updateList(World world, BlockPos pos, SkullBlockEntity blockEntity, CallbackInfo ci,
 	                                      BlockPattern blockPattern, BlockPattern.Result result,
 	                                      WitherEntity witherEntity) {

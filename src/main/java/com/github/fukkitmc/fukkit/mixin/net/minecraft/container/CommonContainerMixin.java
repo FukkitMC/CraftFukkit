@@ -19,11 +19,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin (
 {AbstractFurnaceContainer.class, BeaconContainer.class, BrewingStandContainer.class, CartographyTableContainer.class,
- CraftingTableContainer.class, EnchantingTableContainer.class
+ CraftingTableContainer.class, EnchantingTableContainer.class, GenericContainer.class, GrindstoneContainer.class,
+ HopperContainer.class, HorseContainer.class
 })
 public abstract class CommonContainerMixin extends ContainerMixin implements CommonContainerAccess {
 	private CraftInventoryView view;
-	public Player player;
+	public PlayerInventory inventory;
 
 	@Inject (
 	method = "<init>(Lnet/minecraft/container/ContainerType;Lnet/minecraft/recipe/RecipeType;" +
@@ -34,13 +35,13 @@ public abstract class CommonContainerMixin extends ContainerMixin implements Com
 	                               RecipeType<? extends AbstractCookingRecipe> recipeType, int syncId,
 	                               PlayerInventory playerInventory, Inventory inventory,
 	                               PropertyDelegate propertyDelegate, CallbackInfo ci) {
-		this.player = (Player) ((PlayerEntityAccess<?>) playerInventory.player).getBukkit();
+		this.inventory = playerInventory;
 	}
 
 	@Override
 	public InventoryView getBukkitView() {
 		if (this.view != null) { return this.view; }
-		this.view = new CraftInventoryView(this.player, this.createInventory(), (Container) (Object) this);
+		this.view = new CraftInventoryView(((PlayerEntityAccess<?>) inventory.player).getBukkit(), this.createInventory(), (Container) (Object) this);
 		return this.view;
 	}
 
@@ -50,7 +51,17 @@ public abstract class CommonContainerMixin extends ContainerMixin implements Com
 	}
 
 	@Override
-	public void setPlayer(Player player) {
-		this.player = player;
+	public void setInventory(PlayerInventory inventory) {
+		this.inventory = inventory;
+	}
+
+	@Override
+	public Player getPlayer() {
+		return (Player) ((PlayerEntityAccess<?>) this.getInventory()).getBukkit();
+	}
+
+	@Override
+	public PlayerInventory getInventory() {
+		return this.inventory;
 	}
 }

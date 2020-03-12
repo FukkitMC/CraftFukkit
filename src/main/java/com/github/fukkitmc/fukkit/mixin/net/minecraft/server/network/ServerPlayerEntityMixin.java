@@ -3,7 +3,7 @@ package com.github.fukkitmc.fukkit.mixin.net.minecraft.server.network;
 import com.github.fukkitmc.fukkit.access.net.minecraft.container.ContainerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.entity.EntityAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.InventoryAccess;
-import com.github.fukkitmc.fukkit.access.net.minecraft.network.packet.c2s.play.ClientSettingsC2SPacketAccess;
+import com.github.fukkitmc.fukkit.mixin.net.minecraft.network.packet.c2s.play.ClientSettingsC2SPacketAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.server.network.ServerPlayNetworkHandlerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.server.network.ServerPlayerEntityAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.server.world.ServerWorldAccess;

@@ -184,8 +184,7 @@ public class ExplosionMixin {
 	@Inject (method = "affectWorld", at = @At (value = "INVOKE",
 	                                           target = "Lnet/minecraft/block/BlockState;getDroppedStacks" +
 	                                                    "(Lnet/minecraft/loot/context/LootContext$Builder;)" +
-	                                                    "Ljava/util/List;",
-	                                           args = "log=true"), locals = LocalCapture.CAPTURE_FAILHARD)
+	                                                    "Ljava/util/List;"), locals = LocalCapture.PRINT)
 	private void fukkit_addYield(boolean bl, CallbackInfo ci) {
 		float yield = YIELD.get();
 		if (yield < 1.0f) {

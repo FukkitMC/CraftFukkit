@@ -4,7 +4,8 @@ import com.github.fukkitmc.fukkit.access.net.minecraft.container.CommonContainer
 import com.github.fukkitmc.fukkit.access.net.minecraft.entity.EntityAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.entity.player.HungerManagerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.entity.player.PlayerEntityAccess;
-import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.InventoryAccess;
+import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.BasicInventoryAccess;
+import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.CraftingInventoryAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.world.WorldAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.world.dimension.DimensionTypeAccess;
 import com.mojang.datafixers.util.Pair;
@@ -83,8 +84,7 @@ public class Constructors {
 		return LEVELGENERATORTYPE_I_STRING.newInstance(id, name);
 	}
 
-	public static DimensionType newDimensionType(int i, String s, String s1, BiFunction<World, DimensionType, ?
-	                                                                                                          extends Dimension> bifunction, boolean flag, BiomeAccessType genlayerzoomer, DimensionType type) {
+	public static DimensionType newDimensionType(int i, String s, String s1, BiFunction<World, DimensionType, ? extends Dimension> bifunction, boolean flag, BiomeAccessType genlayerzoomer, DimensionType type) {
 		try {
 			DimensionType type1 = DIMENSION_TYPE_CONSTRUCTOR.newInstance(i, s, s1, bifunction, flag, genlayerzoomer);
 			((DimensionTypeAccess) type1).setType(type);
@@ -152,21 +152,21 @@ public class Constructors {
 
 	public static BasicInventory newBasicInventory(int size, InventoryHolder holder) {
 		BasicInventory inventory = new BasicInventory(size);
-		((InventoryAccess) inventory).setOwner(holder);
+		((BasicInventoryAccess) inventory).setOwner(holder);
 		return inventory;
 	}
 
 	public static CraftingInventory newCraftingInventory(Container container, int width, int height,
 	                                                     PlayerEntity entity) {
 		CraftingInventory inventory = new CraftingInventory(container, width, height);
-		((InventoryAccess) inventory).setOwner((InventoryHolder) ((EntityAccess) entity).getBukkit());
+		((CraftingInventoryAccess) inventory).setOwner((InventoryHolder) ((EntityAccess) entity).getBukkit());
 		return inventory;
 	}
 
 	public static BasicInventory newComposterBlock$DummyInventory(IWorld world, BlockPos pos) {
 		try {
 			BasicInventory dummy = COMPOSTER_BLOCK_DUMMY_INVENTORY_CONSTRUCTOR.newInstance();
-			((InventoryAccess) dummy).setOwner(new CraftBlockInventoryHolder(world, pos, dummy));
+			((BasicInventoryAccess) dummy).setOwner(new CraftBlockInventoryHolder(world, pos, dummy));
 			return dummy;
 		} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
 			throw new RuntimeException(e);
@@ -175,7 +175,7 @@ public class Constructors {
 
 	public static EnderChestInventory newEnderChestInventory(PlayerEntity owner) {
 		EnderChestInventory inventory = new EnderChestInventory();
-		((InventoryAccess) inventory).setOwner(((PlayerEntityAccess<?>) owner).getBukkit());
+		((BasicInventoryAccess) inventory).setOwner(((PlayerEntityAccess<?>) owner).getBukkit());
 		return inventory;
 	}
 
@@ -188,7 +188,7 @@ public class Constructors {
 	public static LecternContainer newLecternContainer(int syncId, PlayerInventory playerInventory) {
 		LecternContainer container = new LecternContainer(syncId);
 		((CommonContainerAccess) container)
-		.setPlayer(((PlayerEntityAccess<CraftPlayer>) playerInventory.player).getBukkit());
+		.setInventory(playerInventory);
 		return container;
 	}
 
@@ -196,7 +196,7 @@ public class Constructors {
 	PlayerInventory playerInventory) {
 		LecternContainer container = new LecternContainer(syncId, inventory, delegate);
 		((CommonContainerAccess) container)
-		.setPlayer(((PlayerEntityAccess<CraftPlayer>) playerInventory.player).getBukkit());
+		.setInventory(playerInventory);
 		return container;
 	}
 

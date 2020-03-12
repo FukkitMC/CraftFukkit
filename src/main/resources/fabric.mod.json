@@ -20,8 +20,7 @@
     ]
   },
   "depends": {
-    "fabricloader": ">=0.4.0",
-    "fabric": "*"
+    "fabricloader": ">=0.4.0"
   },
   "mixins": [
     "net/minecraft/fukkit.world.mixins.json",

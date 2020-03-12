@@ -8,7 +8,9 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.InventoryHolder;
 import java.util.List;
 
-public interface InventoryAccess extends LocationInventoryAccess {
+public interface InventoryAccess {
+	Location getLocation();
+
 	List<ItemStack> getContents();
 
 	void onOpen(CraftHumanEntity who);
@@ -18,8 +20,6 @@ public interface InventoryAccess extends LocationInventoryAccess {
 	List<HumanEntity> getViewers();
 
 	InventoryHolder getOwner();
-
-	void setOwner(InventoryHolder holder);
 
 	void setMaxStackSize(int size);
 

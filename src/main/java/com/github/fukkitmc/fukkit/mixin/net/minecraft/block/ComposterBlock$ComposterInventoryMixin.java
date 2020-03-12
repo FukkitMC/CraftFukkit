@@ -1,6 +1,7 @@
 package com.github.fukkitmc.fukkit.mixin.net.minecraft.block;
 
 
+import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.BasicInventoryAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.InventoryAccess;
 import net.minecraft.block.BlockState;
 import net.minecraft.inventory.Inventory;
@@ -16,6 +17,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ComposterBlock$ComposterInventoryMixin {
 	@Inject (method = "<init>", at = @At ("TAIL"))
 	private void fukkit_bukkitInventory(BlockState state, IWorld world, BlockPos pos, CallbackInfo ci) {
-		((InventoryAccess) this).setOwner(new CraftBlockInventoryHolder(world, pos, (Inventory) this));
+		((BasicInventoryAccess) this).setOwner(new CraftBlockInventoryHolder(world, pos, (Inventory) this));
 	}
 }

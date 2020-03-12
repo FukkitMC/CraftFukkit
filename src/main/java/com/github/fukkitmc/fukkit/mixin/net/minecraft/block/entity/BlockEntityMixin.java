@@ -1,6 +1,7 @@
 package com.github.fukkitmc.fukkit.mixin.net.minecraft.block.entity;
 
 import com.github.fukkitmc.fukkit.access.net.minecraft.block.entity.BlockEntityAccess;
+import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.InventoryAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.world.WorldAccess;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.CompoundTag;
@@ -10,8 +11,6 @@ import org.bukkit.block.BlockState;
 import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
 import org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry;
 import org.bukkit.inventory.InventoryHolder;
-import org.spongepowered.asm.mixin.Implements;
-import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,9 +18,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Implements (@Interface (iface = BlockEntityAccess.class, prefix = "fukkit$"))
 @Mixin (BlockEntity.class)
-public abstract class BlockEntityMixin {
+public abstract class BlockEntityMixin implements BlockEntityAccess {
 	private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
 	public CraftPersistentDataContainer persistentDataContainer;
 	@Shadow protected World world;
@@ -42,7 +40,7 @@ public abstract class BlockEntityMixin {
 	}
 
 
-	public InventoryHolder fukkit$getOwner() {
+	public InventoryHolder getOwner() {
 		if (this.world == null) { return null; }
 		BlockState state = ((WorldAccess) this.world).getBukkit()
 		                                             .getBlockAt(this.pos.getX(), this.pos.getY(), this.pos.getZ())
@@ -50,15 +48,18 @@ public abstract class BlockEntityMixin {
 		return state instanceof InventoryHolder ? (InventoryHolder) state : null;
 	}
 
-	public CraftPersistentDataContainer fukkit$getContainer() {
+	@Override
+	public CraftPersistentDataContainer getContainer() {
 		return this.persistentDataContainer;
 	}
 
-	public void fukkit$setContainer(CraftPersistentDataContainer container) {
+	@Override
+	public void setContainer(CraftPersistentDataContainer container) {
 		this.persistentDataContainer = container;
 	}
 
-	public void fukkit$setWorld(World world) {
+	@Override
+	public void setWorld(World world) {
 		this.world = world;
 	}
 }

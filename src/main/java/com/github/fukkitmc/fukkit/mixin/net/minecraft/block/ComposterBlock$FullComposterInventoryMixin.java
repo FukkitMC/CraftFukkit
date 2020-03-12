@@ -1,5 +1,6 @@
 package com.github.fukkitmc.fukkit.mixin.net.minecraft.block;
 
+import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.BasicInventoryAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.InventoryAccess;
 import net.minecraft.block.BlockState;
 import net.minecraft.inventory.BasicInventory;
@@ -27,7 +28,7 @@ public abstract class ComposterBlock$FullComposterInventoryMixin extends BasicIn
 
 	@Inject (method = "<init>", at = @At ("TAIL"))
 	private void onInit(BlockState state, IWorld world, BlockPos pos, CallbackInfo ci) {
-		((InventoryAccess) this).setOwner(new CraftBlockInventoryHolder(world, pos, this));
+		((BasicInventoryAccess) this).setOwner(new CraftBlockInventoryHolder(world, pos, this));
 	}
 
 	@Inject (method = "markDirty", at = @At ("HEAD"), cancellable = true)

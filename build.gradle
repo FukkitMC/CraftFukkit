@@ -23,7 +23,6 @@ configurations {
 }
 
 dependencies {
-
 	testCompile 'me.lucko:jar-relocator:1.4'
 
 	//to change the versions see the gradle.properties file
@@ -34,9 +33,6 @@ dependencies {
 	releaseJars files('libs/Dev-Lib-1.0-SNAPSHOT.jar')
 	// hacky gradle script, see below
 	compileOnly files("libs/yarrnbukkit-${project.minecraft_version}.jar")
-
-	// and why not
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
 	configurations.compile.extendsFrom(configurations.releaseJars)
 }

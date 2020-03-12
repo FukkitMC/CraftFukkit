@@ -18,7 +18,6 @@ public class DimensionMixin implements DimensionAccess {
 	 * @author HalfOf2
 	 */
 	@Override
-	//@Intrinsic
 	@Overwrite
 	public DimensionType getType() {
 		return this.type;

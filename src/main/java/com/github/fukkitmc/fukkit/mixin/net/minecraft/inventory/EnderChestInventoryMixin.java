@@ -12,7 +12,7 @@ public class EnderChestInventoryMixin extends BasicInventoryMixin {
 	@Shadow private EnderChestBlockEntity currentBlockEntity;
 
 	@Override
-	public Location fukkit$getLocation() {
+	public Location getLocation() {
 		return new Location(((WorldAccess) this.currentBlockEntity.getWorld()).getBukkit(), this.currentBlockEntity
 		                                                                                    .getPos()
 		                                                                                    .getX(), this.currentBlockEntity

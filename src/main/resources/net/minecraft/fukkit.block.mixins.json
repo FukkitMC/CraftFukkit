@@ -3,7 +3,6 @@
   "package": "com.github.fukkitmc.fukkit.mixin.net.minecraft.block",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "entity.BlockEntityMixin",
     "AbstractButtonBlockMixin",
     "AbstractPressurePlateBlockMixin",
     "AbstractRedstoneGateBlockMixin",
@@ -80,7 +79,9 @@
     "TurtleEggBlockMixin",
     "VineBlockMixin",
     "WeightedPressurePlateBlockMixin",
-    "WitherSkullBlockMixin"
+    "WitherSkullBlockMixin",
+    "entity.AbstractFurnaceBlockEntityMixin",
+    "entity.BlockEntityMixin"
   ],
   "injectors": {
     "injectionPoints": [

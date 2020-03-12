@@ -1,5 +1,6 @@
 package com.github.fukkitmc.fukkit.mixin.net.minecraft.inventory;
 
+import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.BasicInventoryAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.InventoryAccess;
 import com.github.fukkitmc.fukkit.util.Constants;
 import net.minecraft.inventory.BasicInventory;
@@ -13,9 +14,8 @@ import org.spongepowered.asm.mixin.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Implements (@Interface (iface = InventoryAccess.class, prefix = "fukkit$"))
 @Mixin (BasicInventory.class)
-public class BasicInventoryMixin {
+public class BasicInventoryMixin implements BasicInventoryAccess {
 	public List<HumanEntity> viewers = new ArrayList<>();
 	@Shadow
 	@Final
@@ -23,35 +23,43 @@ public class BasicInventoryMixin {
 	private InventoryHolder holder;
 	private int maxStack = Constants.MAX_STACK;
 
-	public List<ItemStack> fukkit$getContents() {
+	@Override
+	public List<ItemStack> getContents() {
 		return this.stackList;
 	}
 
-	public void fukkit$onOpen(CraftHumanEntity who) {
+	@Override
+	public void onOpen(CraftHumanEntity who) {
 		this.viewers.add(who);
 	}
 
-	public void fukkit$onClose(CraftHumanEntity who) {
+	@Override
+	public void onClose(CraftHumanEntity who) {
 		this.viewers.remove(who);
 	}
 
-	public List<HumanEntity> fukkit$getViewers() {
+	@Override
+	public List<HumanEntity> getViewers() {
 		return this.viewers;
 	}
 
-	public InventoryHolder fukkit$getOwner() {
+	@Override
+	public InventoryHolder getOwner() {
 		return this.holder;
 	}
 
-	public void fukkit$setOwner(InventoryHolder holder) {
+	@Override
+	public void setOwner(InventoryHolder holder) {
 		this.holder = holder;
 	}
 
-	public void fukkit$setMaxStackSize(int size) {
+	@Override
+	public void setMaxStackSize(int size) {
 		this.maxStack = size;
 	}
 
-	public Location fukkit$getLocation() {
+	@Override
+	public Location getLocation() {
 		return null;
 	}
 }

@@ -5,8 +5,6 @@ import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
 import org.bukkit.inventory.InventoryHolder;
 
 public interface BlockEntityAccess {
-	InventoryHolder getOwner();
-
 	CraftPersistentDataContainer getContainer();
 
 	void setContainer(CraftPersistentDataContainer container);
