@@ -1,6 +1,6 @@
 package com.github.fukkitmc.fukkit.util;
 
-import com.github.fukkitmc.fukkit.access.net.minecraft.container.CommonContainerAccess;
+import com.github.fukkitmc.fukkit.access.net.minecraft.container.LecternContainerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.entity.EntityAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.entity.player.HungerManagerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.entity.player.PlayerEntityAccess;
@@ -41,7 +41,6 @@ import net.minecraft.world.level.LevelGeneratorType;
 import net.minecraft.world.level.LevelProperties;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.craftbukkit.generator.CustomChunkGenerator;
 import org.bukkit.craftbukkit.inventory.CraftBlockInventoryHolder;
 import org.bukkit.generator.ChunkGenerator;
@@ -61,9 +60,9 @@ public class Constructors {
 			LEVELGENERATORTYPE_I_STRING = LevelGeneratorType.class.getDeclaredConstructor(int.class, String.class);
 			DIMENSION_TYPE_CONSTRUCTOR = DimensionType.class
 			                             .getDeclaredConstructor(int.class, String.class, String.class,
-			                             BiFunction.class, boolean.class, BiomeAccessType.class);
+			                                                     BiFunction.class, boolean.class, BiomeAccessType.class);
 			COMPOSTER_BLOCK_DUMMY_INVENTORY_CONSTRUCTOR = findInnerClassConstructor(ComposterBlock.class,
-			"DummyInventory");
+			                                                                        "DummyInventory"); // todo fix
 		} catch (NoSuchMethodException e) {
 			throw new RuntimeException(e);
 		}
@@ -101,7 +100,7 @@ public class Constructors {
 	                                   WorldGenerationProgressListener worldGenerationProgressListener,
 	                                   ChunkGenerator generator, World.Environment environment) {
 		ServerWorld world = new ServerWorld(server, workerExecutor, worldSaveHandler, properties, dimensionType,
-		profiler, worldGenerationProgressListener);
+		                                    profiler, worldGenerationProgressListener);
 		WorldAccess access = (WorldAccess) world;
 		access.setGenerator(generator);
 		access.setBukkit(new CraftWorld(world, generator, environment));
@@ -112,13 +111,13 @@ public class Constructors {
 			gen = new CustomChunkGenerator(world, generator);
 			access.setChunkManager(new ServerChunkManager(world, worldSaveHandler.getWorldDir(), worldSaveHandler
 			                                                                                     .getDataFixer(),
-			worldSaveHandler
-			.getStructureManager(), workerExecutor, gen, server
-			                                             .getPlayerManager()
-			                                             .getViewDistance(), worldGenerationProgressListener,
-			() -> server
-			                                                                                                        .getWorld(DimensionType.OVERWORLD)
-			                                                                                                        .getPersistentStateManager()));
+			                                              worldSaveHandler
+			                                              .getStructureManager(), workerExecutor, gen, server
+			                                                                                           .getPlayerManager()
+			                                                                                           .getViewDistance(), worldGenerationProgressListener,
+			                                              () -> server
+			                                                    .getWorld(DimensionType.OVERWORLD)
+			                                                    .getPersistentStateManager()));
 		}
 		return world;
 	}
@@ -128,7 +127,7 @@ public class Constructors {
 	                                               WorldGenerationProgressListener worldGenerationProgressListener,
 	                                               ChunkGenerator generator, World.Environment environment) {
 		SecondaryServerWorld world = new SecondaryServerWorld(sworld, server, workerExecutor, worldSaveHandler,
-		dimensionType, profiler, worldGenerationProgressListener);
+		                                                      dimensionType, profiler, worldGenerationProgressListener);
 		WorldAccess access = (WorldAccess) world;
 		access.setGenerator(generator);
 		access.setBukkit(new CraftWorld(world, generator, environment));
@@ -139,13 +138,13 @@ public class Constructors {
 			gen = new CustomChunkGenerator(world, generator);
 			access.setChunkManager(new ServerChunkManager(world, worldSaveHandler.getWorldDir(), worldSaveHandler
 			                                                                                     .getDataFixer(),
-			worldSaveHandler
-			.getStructureManager(), workerExecutor, gen, server
-			                                             .getPlayerManager()
-			                                             .getViewDistance(), worldGenerationProgressListener,
-			() -> server
-			                                                                                                        .getWorld(DimensionType.OVERWORLD)
-			                                                                                                        .getPersistentStateManager()));
+			                                              worldSaveHandler
+			                                              .getStructureManager(), workerExecutor, gen, server
+			                                                                                           .getPlayerManager()
+			                                                                                           .getViewDistance(), worldGenerationProgressListener,
+			                                              () -> server
+			                                                    .getWorld(DimensionType.OVERWORLD)
+			                                                    .getPersistentStateManager()));
 		}
 		return world;
 	}
@@ -187,16 +186,16 @@ public class Constructors {
 
 	public static LecternContainer newLecternContainer(int syncId, PlayerInventory playerInventory) {
 		LecternContainer container = new LecternContainer(syncId);
-		((CommonContainerAccess) container)
-		.setInventory(playerInventory);
+		((LecternContainerAccess) container)
+		.setPlayerInv(playerInventory);
 		return container;
 	}
 
 	public static LecternContainer newLecternContainer(int syncId, Inventory inventory, PropertyDelegate delegate,
-	PlayerInventory playerInventory) {
+	                                                   PlayerInventory playerInventory) {
 		LecternContainer container = new LecternContainer(syncId, inventory, delegate);
-		((CommonContainerAccess) container)
-		.setInventory(playerInventory);
+		((LecternContainerAccess) container)
+		.setPlayerInv(playerInventory);
 		return container;
 	}
 

@@ -40,7 +40,7 @@ public abstract class CraftingResultInventoryMixin implements Inventory {
 	}
 
 	public java.util.List<HumanEntity> getViewers() {
-		return new java.util.ArrayList<HumanEntity>();
+		return new java.util.ArrayList<>();
 	}
 
 	@Override

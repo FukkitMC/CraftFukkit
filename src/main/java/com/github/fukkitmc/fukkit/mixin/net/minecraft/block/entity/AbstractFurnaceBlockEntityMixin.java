@@ -92,7 +92,7 @@ public abstract class AbstractFurnaceBlockEntityMixin extends BlockEntityMixin i
 
 	@Inject (method = "craftRecipe",
 	         at = @At (value = "INVOKE", target = "Lnet/minecraft/item/ItemStack;isEmpty()Z", ordinal = 0),
-	         locals = LocalCapture.PRINT)
+	         locals = LocalCapture.CAPTURE_FAILHARD)
 	private void fukkit_overwriteIf(Recipe<?> recipe, CallbackInfo ci, ItemStack stack, ItemStack itemstack1,
 	                                ItemStack itemstack2) {
 		CraftItemStack source = CraftItemStack.asCraftMirror(stack);

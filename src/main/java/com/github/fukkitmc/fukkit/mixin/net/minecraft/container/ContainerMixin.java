@@ -37,7 +37,7 @@ public abstract class ContainerMixin implements ContainerAccess {
 	@Shadow @Final public int syncId;
 
 	@Shadow
-	public abstract Slot getSlot(int index);
+	public native Slot getSlot(int index);
 
 	public boolean checkReachable;
 	private Text title;
@@ -105,6 +105,8 @@ public abstract class ContainerMixin implements ContainerAccess {
 			// The only time the carried item will be set to null is if the inventory is closed by the server.
 			// If the inventory is closed by the server, then the cursor items are dropped.  This is why we change the
 			// cursor early.
+
+
 			if (playerInventory.getCursorStack() != null) {
 				playerInventory.setCursorStack(CraftItemStack.asNMSCopy(event.getCursor()));
 				needsUpdate = true;
