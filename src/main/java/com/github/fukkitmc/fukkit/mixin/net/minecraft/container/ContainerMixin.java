@@ -158,8 +158,7 @@ public abstract class ContainerMixin implements ContainerAccess {
 	         locals = LocalCapture.CAPTURE_FAILHARD)
 	private void fukkit_ensureClient(int slotId, int clickData, SlotActionType actionType, PlayerEntity playerEntity,
 	                                 CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack,
-	                                 PlayerInventory playerInventory, Slot slot4, ItemStack itemStack7,
-	                                 ItemStack itemStack8, int p) {
+	                                 PlayerInventory playerInventory, Slot slot4) {
 		if (playerEntity instanceof ServerPlayerEntity && slot4.getMaxStackAmount() != 64) {
 			((ServerPlayerEntity) playerEntity).networkHandler
 			.sendPacket(new ContainerSlotUpdateS2CPacket(this.syncId, slot4.id, slot4.getStack()));

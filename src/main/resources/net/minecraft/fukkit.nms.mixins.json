@@ -31,6 +31,9 @@
     "container.HorseContainerMixin",
     "container.LecternContainerMixin",
     "container.LoomContainerMixin",
+    "container.MerchantContainerMixin",
+    "container.ShulkerBoxContainerMixin",
+    "container.StonecutterContainerMixin",
     "datafixer.fix.ItemInstanceMapIdFixMixin",
     "datafixer.fix.ItemInstanceTheFlatteningFixMixin",
     "enchantment.EnchantmentsMixin",
@@ -45,7 +48,12 @@
     "fluid.LavaFluidMixin",
     "inventory.BasicInventoryMixin",
     "inventory.CraftingInventoryMixin",
-    "network.packet.c2s.play.ClientSettingsC2SPacketAccess"
+    "inventory.DoubleInventoryMixin",
+    "inventory.EnderChestInventoryMixin",
+    "network.packet.c2s.play.ClientSettingsC2SPacketAccess",
+    "server.command.CommandOutput$1Mixin",
+    "server.command.CommandOutputMixin",
+    "util.math.Vec3iAccess"
   ],
   "injectors": {
     "injectionPoints": [

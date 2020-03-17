@@ -1,6 +1,6 @@
 package com.github.fukkitmc.fukkit.mixin.net.minecraft.block;
 
-import com.github.fukkitmc.fukkit.access.net.minecraft.util.math.Vec3iAccess;
+import com.github.fukkitmc.fukkit.mixin.net.minecraft.util.math.Vec3iAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.world.WorldAccess;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.DragonEggBlock;

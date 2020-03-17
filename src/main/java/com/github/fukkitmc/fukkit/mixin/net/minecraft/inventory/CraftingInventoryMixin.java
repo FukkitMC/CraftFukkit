@@ -1,8 +1,12 @@
 package com.github.fukkitmc.fukkit.mixin.net.minecraft.inventory;
 
+import com.github.fukkitmc.fukkit.access.net.minecraft.container.BlockContextAccess;
+import com.github.fukkitmc.fukkit.access.net.minecraft.container.BlockContextContainerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.CraftingInventoryAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.InventoryAccess;
 import com.github.fukkitmc.fukkit.util.Constants;
+import net.minecraft.container.Container;
+import net.minecraft.container.CraftingTableContainer;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
@@ -25,6 +29,7 @@ public class CraftingInventoryMixin {
 	@Shadow
 	@Final
 	private DefaultedList<ItemStack> stacks;
+	@Shadow @Final private Container container;
 	private Player holder;
 	private Recipe<?> recipe;
 	private Inventory resultInventory;
@@ -62,10 +67,7 @@ public class CraftingInventoryMixin {
 	}
 
 	public Location fukkit$getLocation() {
-		return null;
-		// todo fix
-		//return this.container instanceof CraftingTableContainer ? ((BlockContextAccess)((HasBlockContextAccess)this
-		// .container).getContext()).getLocation():holder.getLocation();
+		return this.container instanceof CraftingTableContainer ? ((BlockContextAccess)((BlockContextContainerAccess)this.container).getContext()).getLocation() : this.holder.getLocation();
 	}
 
 	public Recipe<?> fukkit$getCurrentRecipe() {

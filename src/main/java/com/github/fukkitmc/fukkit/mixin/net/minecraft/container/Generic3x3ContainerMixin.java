@@ -32,7 +32,7 @@ public abstract class Generic3x3ContainerMixin extends ContainerMixin implements
 	@Override
 	public InventoryView getBukkitView() {
 		if (this.view != null) { return this.view; }
-		this.view = new CraftInventoryView(((PlayerEntityAccess<?>) playerInventory.player).getBukkit(), new CraftInventory(this.inventory),
+		this.view = new CraftInventoryView(((PlayerEntityAccess<?>) this.playerInventory.player).getBukkit(), new CraftInventory(this.inventory),
 		                                   (Container) (Object) this);
 		return this.view;
 	}

@@ -38,7 +38,7 @@ public abstract class BeaconContainerMixin implements ContainerAccess {
 	@Override
 	public InventoryView getBukkitView() {
 		if (this.view != null) { return this.view; }
-		this.view = new CraftInventoryView(((PlayerEntityAccess<?>) playerInventory.player).getBukkit(), new CraftInventoryBeacon(this.paymentInv),
+		this.view = new CraftInventoryView(((PlayerEntityAccess<?>) this.playerInventory.player).getBukkit(), new CraftInventoryBeacon(this.paymentInv),
 		                                   (Container) (Object) this);
 		return this.view;
 	}

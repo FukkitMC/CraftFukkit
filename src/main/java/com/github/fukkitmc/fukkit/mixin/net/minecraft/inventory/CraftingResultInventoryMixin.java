@@ -12,34 +12,33 @@ import org.spongepowered.asm.mixin.*;
 
 import static com.github.fukkitmc.fukkit.util.Constants.MAX_STACK;
 
-@Implements (@Interface (iface = InventoryAccess.class, prefix = "fukkit$"))
 @Mixin (CraftingResultInventory.class)
-public abstract class CraftingResultInventoryMixin implements Inventory {
+public abstract class CraftingResultInventoryMixin implements InventoryAccess, Inventory {
 	@Shadow @Final private DefaultedList<ItemStack> stack;
 	private int maxStack = MAX_STACK;
 
-	public java.util.List<ItemStack> fukkit$getContents() {
+	@Override public java.util.List<ItemStack> getContents() {
 		return this.stack;
 	}
 
 	// Don't need a transaction; the InventoryCrafting keeps track of it for us
-	public void fukkit$onOpen(CraftHumanEntity who) {}
+	@Override public void onOpen(CraftHumanEntity who) {}
 
-	public void fukkit$onClose(CraftHumanEntity who) {}
+	@Override public void onClose(CraftHumanEntity who) {}
 
-	public org.bukkit.inventory.InventoryHolder fukkit$getOwner() {
+	@Override public org.bukkit.inventory.InventoryHolder getOwner() {
 		return null; // Result slots don't get an owner
 	}
 
-	public void fukkit$setMaxStackSize(int size) {
+	@Override public void setMaxStackSize(int size) {
 		this.maxStack = size;
 	}
 
-	public Location fukkit$getLocation() {
+	@Override public Location getLocation() {
 		return null;
 	}
 
-	public java.util.List<HumanEntity> getViewers() {
+	@Override public java.util.List<HumanEntity> getViewers() {
 		return new java.util.ArrayList<>();
 	}
 

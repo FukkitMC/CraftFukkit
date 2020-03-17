@@ -3,6 +3,7 @@ package com.github.fukkitmc.fukkit.mixin.net.minecraft.container;
 import com.github.fukkitmc.fukkit.access.net.minecraft.container.ContainerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.entity.player.PlayerEntityAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.CraftingInventoryAccess;
+import com.github.fukkitmc.fukkit.util.Constants;
 import com.github.fukkitmc.fukkit.util.Constructors;
 import net.minecraft.container.BlockContext;
 import net.minecraft.container.Container;
@@ -71,29 +72,7 @@ public abstract class CraftingTableContainerMixin extends Container implements C
 	                                                       "Lnet/minecraft/inventory/CraftingInventory;" +
 	                                                       "Lnet/minecraft/inventory/CraftingResultInventory;)V"))
 	private void fukkit_passThis(int syncId, World world, PlayerEntity player, CraftingInventory craftingInventory, CraftingResultInventory resultInventory) {
-		updateResult(this.syncId, world, this.player, this.craftingInv, this.resultInv, this);
-	}
-
-	private static void updateResult(int syncId, World world, PlayerEntity player,
-	                                 CraftingInventory craftingInventory,
-	                                 CraftingResultInventory resultInventory, Container container) {
-		if (!world.isClient) {
-			ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity) player;
-			ItemStack itemStack = ItemStack.EMPTY;
-			Optional<CraftingRecipe> optional = world.getServer().getRecipeManager()
-			                                         .getFirstMatch(RecipeType.CRAFTING, craftingInventory, world);
-			if (optional.isPresent()) {
-				CraftingRecipe craftingRecipe = optional.get();
-				if (resultInventory.shouldCraftRecipe(world, serverPlayerEntity, craftingRecipe)) {
-					itemStack = craftingRecipe.craft(craftingInventory);
-				}
-			}
-			itemStack = CraftEventFactory
-			            .callPreCraftEvent(craftingInventory, resultInventory, itemStack, ((ContainerAccess) container)
-			                                                                              .getBukkitView(), false);
-			resultInventory.setInvStack(0, itemStack);
-			serverPlayerEntity.networkHandler.sendPacket(new ContainerSlotUpdateS2CPacket(syncId, 0, itemStack));
-		}
+		Constants.updateResult(this.syncId, world, this.player, this.craftingInv, this.resultInv, this);
 	}
 
 

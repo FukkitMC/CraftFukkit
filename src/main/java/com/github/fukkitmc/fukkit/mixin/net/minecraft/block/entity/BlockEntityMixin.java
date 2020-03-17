@@ -8,6 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.bukkit.block.BlockState;
+import org.bukkit.craftbukkit.libs.jline.internal.Nullable;
 import org.bukkit.craftbukkit.persistence.CraftPersistentDataContainer;
 import org.bukkit.craftbukkit.persistence.CraftPersistentDataTypeRegistry;
 import org.bukkit.inventory.InventoryHolder;
@@ -24,6 +25,11 @@ public abstract class BlockEntityMixin implements BlockEntityAccess {
 	public CraftPersistentDataContainer persistentDataContainer;
 	@Shadow protected World world;
 	@Shadow protected BlockPos pos;
+
+	@Shadow public native net.minecraft.block.BlockState getCachedState();
+
+	@Shadow @Nullable
+	public native World getWorld();
 
 	@Inject (method = "fromTag", at = @At ("RETURN"))
 	private void fukkit_persistentData(CompoundTag tag, CallbackInfo ci) {

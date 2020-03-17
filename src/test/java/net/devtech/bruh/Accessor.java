@@ -2,6 +2,7 @@ package net.devtech.bruh;
 
 import me.lucko.jarrelocator.JarRelocator;
 import me.lucko.jarrelocator.Relocation;
+import net.minecraft.block.dispenser.BlockPlacementDispenserBehavior;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -17,6 +18,7 @@ public class Accessor {
 	public static final String NMS_VERSION = "v1_15_R1/";
 
 	public static void main(String[] args) throws IOException {
+		Object loadPls = BlockPlacementDispenserBehavior.NOOP;
 		// instructions
 		// run build tools
 		// find craftbukkit-1.X.X-R0.1-SNAPSHOT.jar in CraftBukkit/target

@@ -1,33 +1,22 @@
 package com.github.fukkitmc.fukkit.mixin.net.minecraft.block;
 
-import net.devtech.utilib.functions.ThrowingSupplier;
 import net.minecraft.block.BambooBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.enums.BambooLeaves;
-import net.minecraft.state.property.IntProperty;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
-import java.lang.reflect.Field;
 import java.util.Random;
 
 @Mixin (BambooBlock.class)
 public class BambooBlockMixin extends Block {
-	private static final Field RANDOM = ((ThrowingSupplier<Field>) () -> Random.class.getDeclaredField("seed")).get();
-
-	@Shadow
-	@Final
-	public static IntProperty AGE;
-
 	// hahayes local variables :crab: multithreading is gone :crab:
 	// this is likely not a good idea and will most definetly break something
 	// TODO fix
@@ -66,7 +55,6 @@ public class BambooBlockMixin extends Block {
 				world.setBlockState(blockPos, blockState2.with(BambooBlock.LEAVES, BambooLeaves.NONE), 3);
 			}
 		}
-		ci
-		.cancel(); // prevent the other method from running, in theory we could just redirect it, but I'm lazy :tiny_potato:
+		ci.cancel(); // prevent the other method from running, in theory we could just redirect it, but I'm lazy :tiny_potato:
 	}
 }

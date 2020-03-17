@@ -5,6 +5,8 @@ import com.github.fukkitmc.fukkit.access.net.minecraft.entity.player.PlayerEntit
 import com.github.fukkitmc.fukkit.access.net.minecraft.inventory.InventoryAccess;
 import net.minecraft.container.Container;
 import net.minecraft.container.HopperContainer;
+import net.minecraft.container.HorseContainer;
+import net.minecraft.entity.passive.HorseBaseEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
@@ -16,15 +18,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin (HopperContainer.class)
+@Mixin (HorseContainer.class)
 public abstract class HorseContainerMixin extends ContainerMixin implements ContainerAccess {
 	private CraftInventoryView view;
 	public PlayerInventory playerInventory;
 
 	@Inject (
-	method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/inventory/Inventory;)V",
+	method = "<init>",
 	at = @At ("TAIL"))
-	private void fukkit_initPlayer(int syncId, PlayerInventory playerInventory, Inventory inventory, CallbackInfo ci) {
+	private void fukkit_initPlayer(int syncId, PlayerInventory playerInventory, Inventory inventory, HorseBaseEntity horseBaseEntity, CallbackInfo ci) {
 		this.playerInventory = playerInventory;
 	}
 

@@ -72,7 +72,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	@Final
 	@Shadow
 	private static final Logger LOGGER = null;
-	private static int currentTick = (int) (System.currentTimeMillis() / 50);
+
 	public org.bukkit.craftbukkit.CraftServer server;
 	public OptionSet options;
 	public org.bukkit.command.ConsoleCommandSender console;

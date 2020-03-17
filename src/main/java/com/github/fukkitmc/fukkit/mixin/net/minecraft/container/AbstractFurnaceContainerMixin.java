@@ -45,7 +45,7 @@ public abstract class AbstractFurnaceContainerMixin implements ContainerAccess {
 	@Override
 	public InventoryView getBukkitView() {
 		if (this.view != null) { return this.view; }
-		this.view = new CraftInventoryView(((PlayerEntityAccess<?>) playerInventory.player).getBukkit(), new CraftInventoryFurnace(((AbstractFurnaceBlockEntity) this.inventory)),
+		this.view = new CraftInventoryView(((PlayerEntityAccess<?>) this.playerInventory.player).getBukkit(), new CraftInventoryFurnace(((AbstractFurnaceBlockEntity) this.inventory)),
 		                                   (Container) (Object) this);
 		return this.view;
 	}
