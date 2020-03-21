@@ -12,9 +12,7 @@ import org.apache.logging.log4j.Logger;
 // https://tenor.com/view/weird-face-lick-nose-gif-11424629
 public class FukkitInit implements ModInitializer {
 	// TODO mixin verification
-	// stop being lazy and do all the containers by hand
 	// check your TAIL/RETURN, tail is the last return and return is all returns, make sure u did it right
-	// remove all traces of arr (bukkit mappings, and preferably any craftbukkit)
 	// ensure all my injects aren't accidentally injecting into multiple places
 	// make sure I've fully implemented the patch
 	// remove overwrites if possible
@@ -26,6 +24,7 @@ public class FukkitInit implements ModInitializer {
 	// comment all :notvanilla: methods with something, and add constraints or use mixin plugin to disable, or just
 	// move them to CrapFukkit if they aren't used for anything
 	// replace ordinals with slices
+	// remove unessesary overwrites
 
 	public static final String MOD_ID = "fukkit";
 	public static final String MOD_NAME = "fukkit";
@@ -34,6 +33,11 @@ public class FukkitInit implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		try {
+			Class.forName("net.minecraft.block.dispenser.DispenserBehavior");
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 		log(Level.WARN, "Initializing");
 		if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
 			LOGGER.warn("Warning, clients are not supported, loading multiple worlds at once might cause issues!");

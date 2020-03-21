@@ -105,7 +105,9 @@
     "entity.LecternBlockEntityMixin",
     "entity.LockableContainerBlockEntityMixin",
     "entity.ShulkerBoxBlockEntityMixin",
-    "entity.SignBlockEntityMixin"
+    "entity.SignBlockEntityMixin",
+    "sapling.LargeTreeSaplingGeneratorMixin",
+    "sapling.SaplingGeneratorMixin"
   ],
   "injectors": {
     "injectionPoints": [

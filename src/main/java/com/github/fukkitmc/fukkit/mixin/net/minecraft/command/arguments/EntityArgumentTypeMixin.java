@@ -8,31 +8,27 @@ import net.minecraft.command.EntitySelector;
 import net.minecraft.command.EntitySelectorReader;
 import net.minecraft.command.arguments.EntityArgumentType;
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import static net.minecraft.command.arguments.EntityArgumentType.*;
 
-@Implements (@Interface (iface = EntityArgumentTypeAccess.class, prefix = "fukkit$"))
 @Mixin (EntityArgumentType.class)
-public class EntityArgumentTypeMixin {
-	@Shadow @Final private boolean playersOnly;
-	@Shadow @Final private boolean singleTarget;
+public abstract class EntityArgumentTypeMixin implements EntityArgumentTypeAccess {
 
-	public EntitySelector fukkit$parse(StringReader stringReader, boolean overridePermissions) throws CommandSyntaxException {
-		EntitySelectorReader entitySelectorReader = new EntitySelectorReader(stringReader);
-		EntitySelector entitySelector = ((EntitySelectorReaderAccess) entitySelectorReader).parse(overridePermissions);
-		if (entitySelector.getLimit() > 1 && this.singleTarget) {
-			if (this.playersOnly) {
-				stringReader.setCursor(0);
-				throw TOO_MANY_PLAYERS_EXCEPTION.createWithContext(stringReader);
-			} else {
-				stringReader.setCursor(0);
-				throw TOO_MANY_ENTITIES_EXCEPTION.createWithContext(stringReader);
-			}
-		} else if (entitySelector.includesNonPlayers() && this.playersOnly && !entitySelector.isSenderOnly()) {
-			stringReader.setCursor(0);
-			throw PLAYER_SELECTOR_HAS_ENTITIES_EXCEPTION.createWithContext(stringReader);
-		} else {
-			return entitySelector;
-		}
+	@Shadow public abstract EntitySelector parse(StringReader stringReader) throws CommandSyntaxException;
+
+	private static final ThreadLocal<Boolean> OVERRIDE_PERMISSIONS = ThreadLocal.withInitial(() -> false);
+	@Redirect(method = "parse", at = @At(value = "INVOKE", target = "Lnet/minecraft/command/EntitySelectorReader;read()Lnet/minecraft/command/EntitySelector;"))
+	private EntitySelector parse(EntitySelectorReader reader, StringReader stringReader) throws CommandSyntaxException {
+		EntitySelector selector = ((EntitySelectorReaderAccess)reader).parse(OVERRIDE_PERMISSIONS.get());
+		OVERRIDE_PERMISSIONS.set(false);
+		return selector;
+	}
+
+	@Override
+	public EntitySelector parse(StringReader stringReader, boolean overridePermissions) throws CommandSyntaxException {
+		OVERRIDE_PERMISSIONS.set(overridePermissions);
+		return this.parse(stringReader);
 	}
 }

@@ -8,15 +8,16 @@ import org.spongepowered.asm.mixin.Interface;
 import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin (Advancement.class)
-@Implements (@Interface (iface = CraftHandled.class, prefix = "fukkit$"))
-public abstract class AdvancementMixin {
+public abstract class AdvancementMixin implements CraftHandled<org.bukkit.advancement.Advancement> {
 	private org.bukkit.advancement.Advancement advancement = new CraftAdvancement((Advancement) (Object) this);
 
-	public Object fukkit$getBukkit() {
+	@Override
+	public org.bukkit.advancement.Advancement getBukkit() {
 		return this.advancement;
 	}
 
-	public void fukkit$setBukkit(Object object) {
-		this.advancement = (org.bukkit.advancement.Advancement) object;
+	@Override
+	public void setBukkit(org.bukkit.advancement.Advancement object) {
+		this.advancement = object;
 	}
 }

@@ -18,7 +18,7 @@ public class BlockArgumentParserMixin {
 	@Mutable
 	@Shadow @Final private Map<Property<?>, Comparable<?>> blockProperties;
 
-	@Inject (method = "<init>", at = @At ("TAIL"))
+	@Inject (method = "<init>", at = @At ("RETURN"))
 	public void postInit(StringReader reader, boolean allowTag, CallbackInfo ci) {
 		this.blockProperties = new LinkedHashMap<>();
 	}

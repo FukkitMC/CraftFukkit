@@ -11,6 +11,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
@@ -20,130 +25,32 @@ import java.util.function.Predicate;
 
 import static net.minecraft.command.EntitySelectorReader.*;
 
-@Implements (@Interface (iface = EntitySelectorReaderAccess.class, prefix = "fukkit$"))
 @Mixin (EntitySelectorReader.class)
-public abstract class EntitySelectorReaderMixin {
+public abstract class EntitySelectorReaderMixin implements EntitySelectorReaderAccess {
+
+	@Shadow public abstract EntitySelector read() throws CommandSyntaxException;
 
 	@Shadow
 	private boolean usesAt;
+	@Shadow protected abstract void readAtVariable() throws CommandSyntaxException;
 
-	@Shadow
-	private BiFunction<SuggestionsBuilder, Consumer<SuggestionsBuilder>, CompletableFuture<Suggestions>> suggestionProvider;
-	@Shadow
-	@Final
-	private StringReader reader;
-	@Shadow
-	private int limit;
-	@Shadow
-	private boolean includesNonPlayers;
-	@Shadow
-	private BiConsumer<Vec3d, List<? extends Entity>> sorter;
-	@Shadow
-	private boolean senderOnly;
-	@Shadow
-	private Predicate<Entity> predicate;
-	@Shadow
-	private int startCursor;
-	@Shadow
-	@Final
-	private boolean atAllowed;
+	private static final ThreadLocal<Boolean> OVERRIDE_PERMISSIONS = ThreadLocal.withInitial(() -> false);
 
-	public EntitySelector fukkit$parse(boolean overridePermissions) throws CommandSyntaxException {
-		this.startCursor = this.reader.getCursor();
-		this.suggestionProvider = this::suggestSelector;
-		if (this.reader.canRead() && this.reader.peek() == '@') {
-			if (!this.atAllowed) {
-				throw NOT_ALLOWED_EXCEPTION.createWithContext(this.reader);
-			}
-
-			this.reader.skip();
-			this.parseSelector(overridePermissions);
-		} else {
-			this.readRegular();
-		}
-
-		this.buildPredicate();
-		return this.build();
+	@Inject(method = "readAtVariable", at = @At("HEAD"))
+	private void fukkit_parse(CallbackInfo ci) {
+		this.usesAt = !OVERRIDE_PERMISSIONS.get();
 	}
 
-	@Shadow
-	protected abstract CompletableFuture<Suggestions> suggestSelector(SuggestionsBuilder builder,
-	                                                                  Consumer<SuggestionsBuilder> consumer);
-
-	@Unique
-	public void parseSelector(boolean overridePermissions) throws CommandSyntaxException {
-		this.usesAt = !overridePermissions;
-		this.suggestionProvider = this::suggestSelectorRest;
-		if (!this.reader.canRead()) {
-			throw MISSING_EXCEPTION.createWithContext(this.reader);
-		} else {
-			int i = this.reader.getCursor();
-			char c = this.reader.read();
-			if (c == 'p') {
-				this.limit = 1;
-				this.includesNonPlayers = false;
-				this.sorter = NEAREST;
-				this.setEntityType(EntityType.PLAYER);
-			} else if (c == 'a') {
-				this.limit = Integer.MAX_VALUE;
-				this.includesNonPlayers = false;
-				this.sorter = ARBITRARY;
-				this.setEntityType(EntityType.PLAYER);
-			} else if (c == 'r') {
-				this.limit = 1;
-				this.includesNonPlayers = false;
-				this.sorter = EntitySelectorReader.RANDOM;
-				this.setEntityType(EntityType.PLAYER);
-			} else if (c == 's') {
-				this.limit = 1;
-				this.includesNonPlayers = true;
-				this.senderOnly = true;
-			} else {
-				if (c != 'e') {
-					this.reader.setCursor(i);
-					throw EntitySelectorReader.UNKNOWN_SELECTOR_EXCEPTION
-					      .createWithContext(this.reader, '@' + String.valueOf(c));
-				}
-
-				this.limit = Integer.MAX_VALUE;
-				this.includesNonPlayers = true;
-				this.sorter = ARBITRARY;
-				this.predicate = Entity::isAlive;
-			}
-
-			this.suggestionProvider = this::suggestOpen;
-			if (this.reader.canRead() && this.reader.peek() == '[') {
-				this.reader.skip();
-				this.suggestionProvider = this::suggestOptionOrEnd;
-				this.readArguments();
-			}
-		}
+	@Inject(method = "read", at = @At(value = "INVOKE", target = "Lnet/minecraft/command/EntitySelectorReader;readAtVariable()V"))
+	private void fukkit_parseSelector(CallbackInfoReturnable<EntitySelector> cir) throws CommandSyntaxException {
+		this.usesAt = !OVERRIDE_PERMISSIONS.get();
+		this.readAtVariable();
+		OVERRIDE_PERMISSIONS.set(false);
 	}
 
-	@Shadow
-	protected abstract void readRegular() throws CommandSyntaxException;
-
-	@Shadow
-	protected abstract void buildPredicate();
-
-	@Shadow
-	public abstract EntitySelector build();
-
-	@Shadow
-	protected abstract CompletableFuture<Suggestions> suggestSelectorRest(SuggestionsBuilder builder,
-	                                                                      Consumer<SuggestionsBuilder> consumer);
-
-	@Shadow
-	public abstract void setEntityType(EntityType<?> entityType);
-
-	@Shadow
-	protected abstract CompletableFuture<Suggestions> suggestOpen(SuggestionsBuilder builder,
-	                                                              Consumer<SuggestionsBuilder> consumer);
-
-	@Shadow
-	protected abstract CompletableFuture<Suggestions> suggestOptionOrEnd(SuggestionsBuilder builder,
-	                                                                     Consumer<SuggestionsBuilder> consumer);
-
-	@Shadow
-	protected abstract void readArguments() throws CommandSyntaxException;
+	@Override
+	public EntitySelector parse(boolean overridePermissions) throws CommandSyntaxException {
+		OVERRIDE_PERMISSIONS.set(overridePermissions);
+		return this.read();
+	}
 }

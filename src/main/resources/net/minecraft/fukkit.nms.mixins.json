@@ -6,6 +6,7 @@
     "advancement.AdvancementManagerMixin",
     "advancement.AdvancementMixin",
     "advancement.PlayerAdvancementTrackerMixin",
+    "command.EntitySelectorMixin",
     "command.EntitySelectorReaderMixin",
     "command.arguments.BlockArgumentParserMixin",
     "command.arguments.EntityArgumentTypeMixin",
@@ -53,6 +54,7 @@
     "network.packet.c2s.play.ClientSettingsC2SPacketAccess",
     "server.command.CommandOutput$1Mixin",
     "server.command.CommandOutputMixin",
+    "server.command.ServerCommandSourceMixin",
     "util.math.Vec3iAccess"
   ],
   "injectors": {
