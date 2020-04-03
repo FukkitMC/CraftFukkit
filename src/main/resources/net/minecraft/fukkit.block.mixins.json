@@ -2,6 +2,7 @@
   "required": true,
   "package": "com.github.fukkitmc.fukkit.mixin.net.minecraft.block",
   "compatibilityLevel": "JAVA_8",
+  "plugin": "com.github.fukkitmc.fukkit.plugin.PublicPlugin",
   "mixins": [
     "AbstractButtonBlockMixin",
     "AbstractPressurePlateBlockMixin",
@@ -83,8 +84,6 @@
     "WitherSkullBlockMixin",
     "dispenser.BlockPlacementDispenserBehaviorMixin",
     "dispenser.BoatDispenserBehaviorMixin",
-    "dispenser.DispenserBehaviorMixin$12",
-    "dispenser.DispenserBehaviorMixin$9",
     "entity.AbstractFurnaceBlockEntityMixin",
     "entity.BannerBlockEntityMixin",
     "entity.BarrelBlockEntityMixin",

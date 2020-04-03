@@ -4,6 +4,7 @@ import com.github.fukkitmc.fukkit.access.net.minecraft.entity.EntityAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.server.MinecraftServerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.server.PlayerManagerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.server.network.ServerLoginNetworkHandlerAccess;
+import com.github.fukkitmc.fukkit.access.net.minecraft.server.network.ServerPlayNetworkHandlerAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.server.network.ServerPlayerEntityAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.world.border.WorldBorderAccess;
 import com.github.fukkitmc.fukkit.access.net.minecraft.world.dimension.DimensionTypeAccess;
@@ -64,9 +65,8 @@ import java.util.stream.Collectors;
 /**
  * W:arr:NING: CONTAINS CRUST (decompiled mc code)
  */
-@Implements (@Interface (iface = PlayerManagerAccess.class, prefix = "fukkit$"))
 @Mixin (PlayerManager.class)
-public abstract class PlayerManagerMixin {
+public abstract class PlayerManagerMixin implements PlayerManagerAccess {
 	// this is not safe, but oh well. most of them don't have any known side effects, but idk
 	private static final ThreadLocal<String> PROFILE_NAMES = new ThreadLocal<>();
 	private static final ThreadLocal<String> JOIN_MESSAGES = new ThreadLocal<>();
@@ -322,7 +322,8 @@ public abstract class PlayerManagerMixin {
 		return entity.getAdvancementTracker();
 	}
 
-	public String fukkit$disconnect(ServerPlayerEntity entityplayer) { // CraftBukkit - return string
+	@Override
+	public String disconnect(ServerPlayerEntity entityplayer) { // CraftBukkit - return string
 		ServerWorld worldserver = entityplayer.getServerWorld();
 
 		entityplayer.incrementStat(Stats.LEAVE_GAME);
@@ -403,8 +404,9 @@ public abstract class PlayerManagerMixin {
 
 	// CraftBukkit start - Whole method, SocketAddress to LoginListener, added hostname to signature, return
 	// EntityPlayer
-	public ServerPlayerEntity fukkit$attemptLogin(ServerLoginNetworkHandler loginlistener, GameProfile gameprofile,
-	                                              String hostname) {
+	@Override
+	public ServerPlayerEntity attemptLogin(ServerLoginNetworkHandler loginlistener, GameProfile gameprofile,
+	                                       String hostname) {
 		TranslatableText chatmessage;
 
 		// Moved from processLogin
@@ -499,13 +501,15 @@ public abstract class PlayerManagerMixin {
 	@Shadow
 	public abstract boolean canBypassPlayerLimit(GameProfile gameProfile);
 
-	public ServerPlayerEntity fukkit$processLogin(GameProfile gameprofile, ServerPlayerEntity player) { // CraftBukkit
+	@Override
+	public ServerPlayerEntity processLogin(GameProfile gameprofile, ServerPlayerEntity player) { // CraftBukkit
 		// - added EntityPlayer
 		// moved up... :md5pls:
 		return player;
 	}
 
-	public void fukkit$sendAll(Packet packet, PlayerEntity entityhuman) {
+	@Override
+	public void sendAll(Packet packet, PlayerEntity entityhuman) {
 		for (int i = 0; i < this.players.size(); ++i) {
 			ServerPlayerEntity entityplayer = this.players.get(i);
 			if (entityhuman instanceof ServerPlayerEntity && !((ServerPlayerEntityAccess) entityplayer).getBukkit()
@@ -517,13 +521,15 @@ public abstract class PlayerManagerMixin {
 		}
 	}
 
-	public void fukkit$sendAll(Packet<?> packet, World world) {
+	@Override
+	public void sendAll(Packet packet, World world) {
 		for (int i = 0; i < world.getPlayers().size(); ++i) {
 			((ServerPlayerEntity) world.getPlayers().get(i)).networkHandler.sendPacket(packet);
 		}
 	}
 
-	public void fukkit$sendMessage(Text[] lines) {
+	@Override
+	public void sendMessage(Text[] lines) {
 		for (Text line : lines) {
 			this.broadcastChatMessage(line, true);
 		}
@@ -534,12 +540,12 @@ public abstract class PlayerManagerMixin {
 	/**
 	 * public ServerPlayerEntity respawnPlayer(ServerPlayerEntity entityplayer, DimensionType dimensionmanager,
 	 * boolean flag) {
-	 * return this.fukkit$moveToWorld(entityplayer, dimensionmanager, flag, null, true);
+	 * return this.moveToWorld(entityplayer, dimensionmanager, flag, null, true);
 	 * }
 	 */
 
 	// TODO fix
-	/*public ServerPlayerEntity fukkit$moveToWorld(ServerPlayerEntity playerEntity, DimensionType dimensionType,
+	/*public ServerPlayerEntity moveToWorld(ServerPlayerEntity playerEntity, DimensionType dimensionType,
 	boolean alive, Location location, boolean avoidSuffocation) {
 		playerEntity.stopRiding(); // CraftBukkit
 		this.players.remove(playerEntity);
@@ -765,7 +771,7 @@ public abstract class PlayerManagerMixin {
 	@Redirect (method = "disconnectAllPlayers", at = @At (value = "INVOKE",
 	                                                      target = "Lnet/minecraft/server/network/ServerPlayNetworkHandler;disconnect(Lnet/minecraft/text/Text;)V"))
 	private void fukkit_customShutdownMsg(ServerPlayNetworkHandler handler, Text text) {
-		//handler.disconnect(((MinecraftServerAccess)server).getBukkit().getShutdownMessage());
+		((ServerPlayNetworkHandlerAccess)handler).disconnect(((MinecraftServerAccess) this.server).getBukkit().getShutdownMessage());
 	}
 
 	@ModifyArg (method = "broadcastChatMessage", at = @At (value = "INVOKE",

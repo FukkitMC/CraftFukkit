@@ -1,0 +1,8 @@
+{
+  "required": true,
+  "package": "com.github.fukkitmc.fukkit.mixin.access",
+  "compatibilityLevel": "JAVA_8",
+  "plugin": "com.github.fukkitmc.fukkit.plugin.PublicPlugin",
+  "mixins": [
+  ]
+}

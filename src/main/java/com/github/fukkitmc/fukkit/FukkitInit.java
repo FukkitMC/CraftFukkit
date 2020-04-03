@@ -3,6 +3,8 @@ package com.github.fukkitmc.fukkit;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.entity.ai.brain.task.*;
+import net.minecraft.entity.ai.goal.AnimalMateGoal;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,23 +31,18 @@ public class FukkitInit implements ModInitializer {
 	public static final String MOD_ID = "fukkit";
 	public static final String MOD_NAME = "fukkit";
 	public static boolean useJLine = false;
-	public static Logger LOGGER = LogManager.getLogger();
+	public static final Logger LOGGER = LogManager.getLogger();
 
 	@Override
 	public void onInitialize() {
-		try {
-			Class.forName("net.minecraft.block.dispenser.DispenserBehavior");
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		log(Level.WARN, "Initializing");
+		// a
+		Object o = AnimalMateGoal.class.getName();
+		log(Level.WARN, "Initializing" + o);
 		if (FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT) {
 			LOGGER.warn("Warning, clients are not supported, loading multiple worlds at once might cause issues!");
 		}
 	}
-
 	public static void log(Level level, String message) {
 		LOGGER.log(level, "[" + MOD_NAME + "] " + message);
 	}
-
 }

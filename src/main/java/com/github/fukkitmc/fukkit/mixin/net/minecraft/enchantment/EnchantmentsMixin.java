@@ -13,7 +13,7 @@ public class EnchantmentsMixin {
 	@Inject (
 	method = "register(Ljava/lang/String;Lnet/minecraft/enchantment/Enchantment;)" +
 	         "Lnet/minecraft/enchantment/Enchantment;",
-	at = @At ("TAIL"))
+	at = @At ("RETURN"))
 	private static void fukkit_register(String string, Enchantment enchantment,
 	                                    CallbackInfoReturnable<Enchantment> cir) {
 		org.bukkit.enchantments.Enchantment.registerEnchantment(new CraftEnchantment(enchantment));

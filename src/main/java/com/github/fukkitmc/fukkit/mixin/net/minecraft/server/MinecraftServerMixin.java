@@ -55,6 +55,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.Proxy;
 import java.util.Map;
@@ -63,12 +64,11 @@ import java.util.concurrent.Executor;
 
 import static org.bukkit.Bukkit.getAllowNether;
 
-@Implements (@Interface (iface = MinecraftServerAccess.class, prefix = "fukkit$"))
 @Mixin (MinecraftServer.class)
 public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask> implements SnooperListener,
                                                                                                   CommandOutput,
                                                                                                   AutoCloseable,
-                                                                                                  Runnable {
+                                                                                                  Runnable, MinecraftServerAccess {
 	@Final
 	@Shadow
 	private static final Logger LOGGER = null;
@@ -174,35 +174,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	public void loadWorld(String s, String serverName, long seed, LevelGeneratorType generatorType,
 	                      JsonElement generatorSettings) throws IllegalAccessException, InvocationTargetException,
 	                                                            InstantiationException {
-		// this.convertWorld(s); // CraftBukkit - moved down
 		this.setLoadingStage(new TranslatableText("menu.loadingLevel"));
-        /* CraftBukkit start - Remove ticktime arrays and worldsettings
-        WorldNBTStorage worldnbtstorage = this.getConvertable().a(s, this);
-
-        this.a(this.getWorld(), worldnbtstorage);
-        WorldData worlddata = worldnbtstorage.getWorldData();
-        WorldSettings worldsettings;
-
-        if (worlddata == null) {
-            if (this.isDemoMode()) {
-                worldsettings = MinecraftServer.c;
-            } else {
-                worldsettings = new WorldSettings(i, this.getGamemode(), this.getGenerateStructures(), this
-                .isHardcore(), worldtype);
-                worldsettings.setGeneratorSettings(jsonelement);
-                if (this.bonusChest) {
-                    worldsettings.a();
-                }
-            }
-
-            worlddata = new WorldData(worldsettings, s1);
-        } else {
-            worlddata.setName(s1);
-            worldsettings = new WorldSettings(worlddata);
-        }
-
-        this.a(worldnbtstorage.getDirectory(), worlddata);
-        */
 		int worldCount = 3;
 
 		for (int j = 0; j < worldCount; ++j) {
@@ -511,6 +483,8 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 	@Shadow
 	protected abstract void setToDebugWorldProperties(LevelProperties properties);
 
+	@Shadow private long field_4557;
+
 	private void executeModerately() {
 		this.runTasks();
 		java.util.concurrent.locks.LockSupport.parkNanos("executing tasks", 1000L);
@@ -524,23 +498,28 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 		throw new UnsupportedOperationException("Unsupported, sorry, craftbukkit said so :(");
 	}
 
-	public Object fukkit$getBukkit() {
+	@Override
+	public CraftServer getBukkit() {
 		return this.server;
 	}
 
-	public void fukkit$setBukkit(Object object) {
-		this.server = (CraftServer) object;
+	@Override
+	public void setBukkit(CraftServer object) {
+		this.server = object;
 	}
 
-	public ConsoleCommandSender fukkit$getConsoleCommandSender() {
+	@Override
+	public ConsoleCommandSender getConsoleCommandSender() {
 		return this.console;
 	}
 
-	public void fukkit$setConsoleCommandSender(ConsoleCommandSender console) {
+	@Override
+	public void setConsoleCommandSender(ConsoleCommandSender console) {
 		this.console = console;
 	}
 
-	public ConsoleReader fukkit$getReader() {
+	@Override
+	public ConsoleReader getReader() {
 		return this.reader;
 	}
 }
